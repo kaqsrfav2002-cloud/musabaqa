@@ -1,0 +1,2028 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#082826"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>مسابقة الأسئلة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Almarai:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=Reem+Kufi:wght@400;700&family=Amiri:wght@400;700&family=Lalezar&family=Noto+Kufi+Arabic:wght@400;700;900&family=Readex+Pro:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Marhey:wght@400;700&display=swap">
+<style>
+/* Layout: modern Islamic game-show — emerald night ground with a gold 8-point-star lattice; arches frame the logo, section cards and result popups; question numbers sit inside Rub el Hizb stars. All colors are tokens the settings panel rewrites at runtime. */
+:root{
+  --bg:#082826; --bg2:#0f4a43; --primary:#d9ad5b; --accent:#2f8f83;
+  --text:#fbf6e9; --muted:#b5cec6; --cardText:#ffffff;
+  --correct:#2fae6b; --wrong:#c8453b; --overlay:.45; --pattern:.10;
+  --font:'Tajawal', 'Cairo', system-ui, sans-serif;
+  --head:'El Messiri', 'Cairo', system-ui, sans-serif;
+  --bism:'Aref Ruqaa', 'Amiri', serif;
+  --scale:1; --radius:16px;
+  --gold-soft:color-mix(in srgb, var(--primary) 35%, transparent);
+  --gold-faint:color-mix(in srgb, var(--primary) 16%, transparent);
+  --card:color-mix(in srgb, var(--text) 6%, transparent);
+  --tile:color-mix(in srgb, var(--bg) 82%, var(--primary));
+  --panel:#ffffff; --panelText:#13312d; --panelMuted:#5f7a74; --panelLine:#dfe7e3; --panelSoft:#f2f6f3; --panelAccent:#0f6b5c;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:calc(16px * var(--scale));overflow:hidden}
+*{box-sizing:border-box}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+#app{position:relative;height:100%;direction:rtl}
+.bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--bg2),var(--bg) 75%);background-size:cover;background-position:center;z-index:0}
+.bg::after{content:"";position:absolute;inset:0;background:var(--bg);opacity:0}
+.bg.has-img::after{opacity:var(--overlay)}
+.pattern{position:absolute;inset:0;z-index:0;background:var(--primary);opacity:var(--pattern);-webkit-mask:var(--pat) repeat center/96px;mask:var(--pat) repeat center/96px;pointer-events:none}
+.vign{position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 55% 50% at 50% 45%,var(--bg) 10%,transparent 100%);opacity:.75}
+.screen{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;overflow:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 28px}
+.screen[hidden]{display:none!important}
+h1,h2,h3{font-family:var(--head);text-wrap:balance;margin:0}
+
+/* ornament divider */
+.orn{display:flex;align-items:center;gap:12px;color:var(--primary);width:min(360px,80%)}
+.orn i{flex:1;height:1px;background:linear-gradient(to left,transparent,var(--primary))}
+.orn i:last-child{background:linear-gradient(to right,transparent,var(--primary))}
+.orn svg{width:22px;height:22px;flex:none}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--gold-faint)}
+.bar .grow{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.bar h2{font-size:1.5em;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar img.mini{height:44px;width:auto;object-fit:contain}
+.iconbtn{background:var(--card);border:1px solid var(--gold-soft);border-radius:12px;padding:10px 14px;display:inline-flex;align-items:center;gap:8px;font-weight:700;backdrop-filter:blur(8px);transition:background .15s,border-color .15s}
+.iconbtn:hover{background:var(--gold-faint);border-color:var(--primary)}
+.iconbtn svg{width:20px;height:20px}
+.score{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 75%,#fff),var(--primary));color:var(--bg);font-weight:900;border-radius:12px;padding:10px 16px;font-variant-numeric:tabular-nums}
+.score::before{content:"";width:14px;height:14px;background:currentColor;clip-path:polygon(50% 0,61% 25%,85% 15%,75% 39%,100% 50%,75% 61%,85% 85%,61% 75%,50% 100%,39% 75%,15% 85%,25% 61%,0 50%,25% 39%,15% 15%,39% 25%)}
+
+/* home */
+.home{align-items:center;justify-content:center;text-align:center;gap:16px}
+.bism{font-family:var(--bism);font-size:1.7em;color:var(--primary);margin:0;opacity:.95}
+.arch{position:relative;flex:none;width:min(80vw,var(--logoSize,220px),calc(40vh * var(--ar,.83)));aspect-ratio:var(--ar,.83);display:block;padding:0;
+  border-radius:50% 50% 10px 10px / 38% 38% 10px 10px;border:1.5px solid var(--primary);
+  background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--primary) 20%,transparent),transparent 70%),color-mix(in srgb,var(--bg) 55%,transparent);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.arch::before{content:"";position:absolute;inset:7px;border-radius:inherit;border:1px solid var(--gold-soft);pointer-events:none}
+.arch img{position:absolute;top:calc(var(--archTop,22%));bottom:9%;left:12%;right:12%;width:76%;height:calc(91% - var(--archTop,22%));max-width:none;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));animation:float 5s ease-in-out infinite}
+.arch .star{width:clamp(90px,14vw,150px);height:auto;aspect-ratio:1;color:var(--primary);animation:spin 40s linear infinite}
+.arch .star{position:absolute;inset:0;margin:auto}
+.arch.plain{border:0;background:none;box-shadow:none}
+.arch.plain::before{display:none}
+.arch.plain img{inset:0;width:100%;height:100%}
+.home h1{font-size:clamp(2.2em,7vw,4.2em);color:var(--text);line-height:1.2}
+.home h1 em{font-style:normal;color:var(--primary)}
+.home p.sub{font-size:1.2em;color:var(--muted);margin:0;max-width:42ch}
+.big{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 70%,#fff),var(--primary) 55%,color-mix(in srgb,var(--primary) 80%,#000));color:var(--bg);border:0;border-radius:14px;padding:15px 56px;font-size:1.45em;font-weight:900;font-family:var(--head);box-shadow:0 0 0 1px color-mix(in srgb,var(--primary) 60%,#000),0 0 0 5px var(--gold-faint),0 14px 36px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s}
+.big:hover{transform:translateY(-2px);box-shadow:0 0 0 1px color-mix(in srgb,var(--primary) 60%,#000),0 0 0 8px var(--gold-faint),0 18px 40px rgba(0,0,0,.4)}
+.big:active{transform:translateY(1px)}
+.home .corner{position:absolute;top:16px;left:max(16px,env(safe-area-inset-left,0px))}
+@keyframes float{50%{transform:translateY(-8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* section cards: arches */
+.grid{flex:1 1 auto;min-height:0;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:var(--gap,20px);width:100%}
+.cat{position:relative;flex:none;width:var(--cw,220px);height:var(--ch,250px);font-size:calc(16px * var(--scale) * var(--cs,1));border:0;padding:1.4em 1.1em 1.1em;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;text-align:center;color:var(--cardText);
+  background:linear-gradient(170deg,var(--c,var(--accent)),color-mix(in srgb,var(--c,var(--accent)) 45%,#000));
+  border-radius:50% 50% var(--radius) var(--radius) / var(--av,105px) var(--av,105px) var(--radius) var(--radius);overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.35);transition:transform .25s}
+.cat:hover{transform:translateY(-6px)}
+.cat img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cat .cpat{position:absolute;inset:0;background:#fff;opacity:.09;-webkit-mask:var(--pat) repeat center/70px;mask:var(--pat) repeat center/70px}
+.cat .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),rgba(0,0,0,0) 60%)}
+.cat .frame{position:absolute;inset:8px;border:1.5px solid color-mix(in srgb,var(--primary) 75%,#fff);border-radius:50% 50% calc(var(--radius) - 6px) calc(var(--radius) - 6px) / calc(var(--av,105px) - 7px) calc(var(--av,105px) - 7px) calc(var(--radius) - 6px) calc(var(--radius) - 6px);opacity:.8;pointer-events:none}
+.cat .ic{position:absolute;top:max(26px,calc(var(--av,105px) * .32));left:50%;transform:translateX(-50%);font-size:3em;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3))}
+.cat b{position:relative;font-family:var(--head);font-size:1.5em}
+.cat small{position:relative;opacity:.85}
+.cat .prog{position:relative;width:80%;height:5px;border-radius:9px;background:rgba(255,255,255,.22);overflow:hidden}
+.cat .prog i{display:block;height:100%;background:var(--primary)}
+
+@media (max-width:520px){
+  .bar .grow{order:-1;flex-basis:100%}
+  .bar .iconbtn span{display:none}
+  .tchip{padding:6px 10px;font-size:.92em}
+  .life{font-size:.9em}
+}
+/* number tiles: Rub el Hizb stars */
+.nums{flex:1 1 auto;min-height:0;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:var(--ng,14px);width:100%}
+.num{position:relative;flex:none;width:var(--ns,140px);height:var(--ns,140px);font-size:calc(var(--ns,140px) * .16);border:0;background:none;padding:0;display:grid;place-items:center;font-family:var(--head);color:var(--primary);font-variant-numeric:tabular-nums}
+.num::before,.num::after{content:"";position:absolute;inset:17%;background:var(--tile);border:2px solid var(--primary);border-radius:4px;transition:transform .35s,background .2s}
+.num::after{transform:rotate(45deg)}
+.num:hover:not(:disabled)::before{transform:rotate(22.5deg)}
+.num:hover:not(:disabled)::after{transform:rotate(67.5deg)}
+.num .in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;line-height:1}
+.num .nn{font-size:2em;font-weight:700}
+.num .pts{font-size:.72em;font-weight:700;color:var(--muted);margin-top:4px;font-family:var(--font)}
+.num.right,.num.wrong{color:#fff}
+.num.right::before,.num.right::after{background:var(--correct)}
+.num.wrong::before,.num.wrong::after{background:var(--wrong)}
+.num.right .pts,.num.wrong .pts{color:rgba(255,255,255,.85)}
+.num .mark{position:absolute;z-index:1;top:8%;font-size:1em;color:#fff;background:var(--bg);border:1.5px solid var(--primary);width:1.7em;height:1.7em;border-radius:50%;display:grid;place-items:center}
+.num:disabled{cursor:default}
+.cathead{text-align:center;margin-bottom:22px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.cathead h1{font-size:clamp(1.8em,5vw,2.8em);color:var(--primary)}
+
+/* question */
+.qwrap{max-width:min(1500px,100%);width:100%;margin-inline:auto;display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,2.4vh,30px);flex:1;font-size:clamp(15px,calc(.7vw + .95vh),30px)}
+.qmeta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-weight:700}
+.qtext{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--bg2) 70%,transparent),color-mix(in srgb,var(--bg) 70%,transparent));border:1px solid var(--gold-soft);border-radius:var(--radius);padding:1.4em 1.3em;font-family:var(--head);font-size:2em;line-height:1.6;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.qtext::before{content:"";position:absolute;inset:7px;border:1px solid var(--gold-faint);border-radius:calc(var(--radius) - 5px);pointer-events:none}
+.qtext .cn{position:absolute;width:16px;height:16px;background:var(--primary);clip-path:polygon(50% 0,61% 25%,85% 15%,75% 39%,100% 50%,75% 61%,85% 85%,61% 75%,50% 100%,39% 75%,15% 85%,25% 61%,0 50%,25% 39%,15% 15%,39% 25%)}
+.qtext .cn:nth-child(1){top:-8px;right:-8px}.qtext .cn:nth-child(2){top:-8px;left:-8px}.qtext .cn:nth-child(3){bottom:-8px;right:-8px}.qtext .cn:nth-child(4){bottom:-8px;left:-8px}
+.qimg{max-height:30vh;max-width:100%;object-fit:contain;border-radius:12px;align-self:center;border:1px solid var(--gold-soft)}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,1.8vh,24px)}
+@media (max-width:640px){.choices{grid-template-columns:1fr}.choice{min-height:0;padding:.65em .9em;font-size:1.25em}.qtext{padding:1em}}
+.choice{display:flex;align-items:center;gap:14px;text-align:right;background:var(--card);color:var(--text);border:1px solid var(--gold-soft);border-radius:var(--radius);padding:.85em 1em;min-height:3.6em;font-size:1.4em;font-weight:700;transition:transform .12s,background .15s,border-color .15s;min-width:0;backdrop-filter:blur(6px)}
+.choice span.t{min-width:0;overflow-wrap:anywhere}
+.choice:hover:not(:disabled){background:var(--gold-faint);border-color:var(--primary);transform:translateY(-2px)}
+.choice .l{flex:none;width:2.1em;height:2.1em;display:grid;place-items:center;background:var(--primary);color:var(--bg);font-weight:900;font-family:var(--head);clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
+.choice.is-right{background:var(--correct);border-color:var(--correct);color:#fff}
+.choice.is-wrong{background:var(--wrong);border-color:var(--wrong);color:#fff}
+.choice.is-right .l,.choice.is-wrong .l{background:#fff;color:#222}
+.choice:disabled{cursor:default}
+.timer{display:flex;align-items:center;gap:10px}
+.timer .ring{width:3.4em;height:3.4em}
+.timer .ring circle{fill:none;stroke-width:5}
+.timer b{font-size:1.3em;color:var(--text);font-variant-numeric:tabular-nums}
+.after{display:flex;justify-content:center}
+
+/* result popups: arched cards */
+.pop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--bg) 70%,rgba(0,0,0,.5));backdrop-filter:blur(4px);direction:rtl}
+.pop[hidden]{display:none!important}
+.popcard{position:relative;z-index:2;width:min(440px,100%);padding:64px 28px 28px;text-align:center;color:#fff;display:flex;flex-direction:column;align-items:center;gap:12px;
+  border-radius:50% 50% 22px 22px / 130px 130px 22px 22px;box-shadow:0 0 0 1.5px var(--primary),0 0 0 8px var(--gold-faint),0 30px 80px rgba(0,0,0,.5);overflow:hidden}
+.popcard::before{content:"";position:absolute;inset:9px;border:1px solid rgba(255,255,255,.35);border-radius:50% 50% 16px 16px / 122px 122px 16px 16px;pointer-events:none}
+.popcard::after{content:"";position:absolute;inset:0;background:#fff;opacity:.07;-webkit-mask:var(--pat) repeat center/80px;mask:var(--pat) repeat center/80px;pointer-events:none}
+.popcard>*{position:relative;z-index:1}
+.pop.ok .popcard{background:linear-gradient(170deg,color-mix(in srgb,var(--correct) 85%,#fff),color-mix(in srgb,var(--correct) 55%,#000));animation:popin .6s cubic-bezier(.2,1.5,.4,1)}
+.pop.bad .popcard{background:linear-gradient(170deg,var(--wrong),color-mix(in srgb,var(--wrong) 45%,#000));animation:popin .4s ease-out, shake .5s .4s}
+.medal{position:relative;width:150px;height:150px;display:grid;place-items:center}
+.medal svg{position:absolute;inset:0;width:100%;height:100%;color:var(--primary)}
+.pop.ok .medal svg{animation:spin 12s linear infinite;filter:drop-shadow(0 0 18px color-mix(in srgb,var(--primary) 70%,transparent))}
+.pop.bad .medal svg{color:rgba(255,255,255,.35)}
+.popcard .emo{position:relative;font-size:4.6em;line-height:1}
+.pop.ok .emo{animation:bounce 1s .3s infinite}
+.pop.bad .emo{animation:droop 2.4s ease-in-out infinite}
+.popcard img.pimg{position:relative;max-width:110px;max-height:110px;object-fit:contain;border-radius:50%}
+.popcard h2{font-size:2.1em}
+.popcard p{margin:0;font-size:1.12em;opacity:.95}
+.popcard .pts{background:rgba(0,0,0,.2);border:1px solid var(--primary);color:color-mix(in srgb,var(--primary) 60%,#fff);border-radius:999px;padding:6px 18px;font-weight:900}
+.popcard .ans{background:rgba(0,0,0,.25);border-radius:12px;padding:10px 16px;width:100%}
+.popcard .big{font-size:1.15em;padding:11px 44px;margin-top:6px}
+#fx{position:fixed;inset:0;z-index:60;pointer-events:none}
+@keyframes popin{from{transform:scale(.4) translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shake{20%,60%{transform:translateX(-12px)}40%,80%{transform:translateX(12px)}}
+@keyframes bounce{50%{transform:translateY(-12px) scale(1.08)}}
+@keyframes droop{50%{transform:translateY(6px) rotate(-6deg)}}
+
+
+/* screen transitions */
+.screen:not([hidden]){animation:scrIn .35s ease-out}
+@keyframes scrIn{from{opacity:0;transform:translateY(12px)}}
+.home .corner{display:flex;gap:8px}
+/* team strip */
+.tstrip{flex-basis:100%;order:10;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tstrip:empty{display:none}
+.tchip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--card);border:1.5px solid color-mix(in srgb,var(--tc) 70%,transparent);font-weight:700;transition:background .2s,box-shadow .2s}
+.tchip i{width:12px;height:12px;border-radius:50%;background:var(--tc);flex:none}
+.tchip b{font-variant-numeric:tabular-nums;color:var(--primary);font-size:1.15em;font-family:var(--head)}
+.tchip.on{background:color-mix(in srgb,var(--tc) 38%,transparent);border-color:var(--primary);box-shadow:0 0 0 3px var(--gold-faint)}
+.tchip.on::after{content:"الدور";font-size:.72em;background:var(--primary);color:var(--bg);padding:2px 8px;border-radius:999px}
+.tchip.bump b{animation:bump .7s}
+@keyframes bump{40%{transform:scale(1.6)}}
+/* lifelines */
+.lifes{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.lifes[hidden]{display:none!important}
+.life{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--gold-soft);border-radius:999px;padding:6px 14px 6px 8px;font-weight:700;backdrop-filter:blur(6px)}
+.life:hover:not(:disabled){border-color:var(--primary);background:var(--gold-faint)}
+.life .ico{width:30px;height:30px;display:grid;place-items:center;background:var(--primary);color:var(--bg);border-radius:50%;font-weight:900;font-size:.95em}
+.life small{color:var(--muted);font-variant-numeric:tabular-nums}
+.life:disabled{opacity:.38;cursor:default}
+.choice.gone{visibility:hidden}
+/* team setup */
+.twrap{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:26px;max-width:1000px;width:100%;margin-inline:auto}
+.twrap h1{font-size:clamp(1.8em,5vw,3em);color:var(--primary);text-align:center}
+.tsetup{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px;width:100%}
+.tcard{position:relative;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius);background:var(--card);border:1px solid var(--gold-soft);border-inline-start:7px solid var(--tc);backdrop-filter:blur(6px)}
+.tcard .tn{font:700 1.4em var(--head);color:var(--primary);width:1.4em;text-align:center}
+.tcard input[type=text]{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px dashed var(--gold-soft);color:var(--text);font:700 1.25em var(--head);padding:6px 2px}
+.tcard input[type=color]{width:38px;height:38px;border:2px solid var(--gold-soft);background:none;padding:0;border-radius:50%;overflow:hidden;cursor:pointer;flex:none}
+.tcard input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.tcard input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
+.tcard .x{background:none;border:0;color:var(--muted);font-size:1.2em;padding:4px 8px}
+.tcard .x:hover{color:var(--wrong)}
+.tadd{border:1.5px dashed var(--gold-soft);background:transparent;border-radius:var(--radius);padding:16px;color:var(--primary);font-weight:700;font-size:1.1em;min-height:70px}
+.tadd:hover{background:var(--gold-faint)}
+.btns{display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap}
+.ghost{background:transparent;border:1.5px solid var(--gold-soft);color:var(--text);border-radius:14px;padding:13px 28px;font-weight:700;font-size:1.1em}
+.ghost:hover{border-color:var(--primary);background:var(--gold-faint)}
+.hint-keys{color:var(--muted);font-size:.9em;text-align:center}
+/* scoreboard */
+.board{max-width:880px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center}
+.board h1{text-align:center;color:var(--primary);font-size:clamp(1.8em,5vw,2.8em);margin-bottom:8px}
+.brow{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px 18px;background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--radius);backdrop-filter:blur(6px);animation:scrIn .5s both}
+.brow.first{border-color:var(--primary);box-shadow:0 0 0 4px var(--gold-faint)}
+.rk{width:50px;height:50px;display:grid;place-items:center;font:700 1.25em var(--head);color:var(--bg);background:var(--primary);clip-path:polygon(50% 0,61% 25%,85% 15%,75% 39%,100% 50%,75% 61%,85% 85%,61% 75%,50% 100%,39% 75%,15% 85%,25% 61%,0 50%,25% 39%,15% 15%,39% 25%)}
+.brow .nm{display:flex;flex-direction:column;gap:8px;min-width:0}
+.brow .nm b{font-family:var(--head);font-size:1.3em;overflow-wrap:anywhere}
+.bar2{height:10px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar2 i{display:block;height:100%;background:var(--tc);width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.brow .sc{font:900 2em var(--head);color:var(--primary);font-variant-numeric:tabular-nums;min-width:2ch;text-align:center}
+/* end of round */
+.endwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.endwrap h1{font-size:clamp(2em,6vw,3.6em);color:var(--primary)}
+.endwrap .sub{color:var(--muted);font-size:1.2em;margin:0}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:14px;width:min(720px,100%);height:min(44vh,360px);margin-top:10px}
+.pod{flex:1;max-width:210px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.pod .crown{font-size:2.6em;line-height:1;animation:bounce 1.4s infinite}
+.pod .who{font:700 1.25em var(--head);overflow-wrap:anywhere}
+.pod .pts{color:var(--primary);font-weight:900;font-variant-numeric:tabular-nums}
+.pod .blk{width:100%;border-radius:16px 16px 0 0;background:linear-gradient(180deg,var(--tc),color-mix(in srgb,var(--tc) 45%,#000));display:flex;justify-content:center;padding-top:14px;font:900 2.4em var(--head);color:#fff;border:1.5px solid var(--primary);border-bottom:0;transform-origin:bottom;animation:rise 1s cubic-bezier(.2,.8,.2,1) both}
+.pod.p1 .blk{height:62%;animation-delay:.6s}.pod.p2 .blk{height:46%;animation-delay:.3s}.pod.p3 .blk{height:34%}
+@keyframes rise{from{transform:scaleY(0)}}
+.solo-score{font:900 clamp(4em,14vw,7em) var(--head);color:var(--primary);line-height:1}
+.endrest{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.popcard .tn{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:999px;padding:5px 14px;font-weight:700}
+.popcard .tn i{width:12px;height:12px;border-radius:50%;background:var(--tc)}
+.popcard .exp{background:rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;width:100%;line-height:1.7;font-size:.98em}
+
+
+/* gift reveal: full screen */
+.gift{position:fixed;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2vh;padding:24px max(16px,env(safe-area-inset-left,0px));background:radial-gradient(ellipse at center,var(--bg2),var(--bg) 72%);direction:rtl;text-align:center;overflow:hidden;font-family:var(--font)}
+.gift[hidden]{display:none!important}
+.gift .rays{position:absolute;left:50%;top:50%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;background:repeating-conic-gradient(from 0deg,var(--gold-faint) 0 7deg,transparent 7deg 18deg);opacity:.25;animation:spin 40s linear infinite;pointer-events:none;transition:opacity .8s}
+.gift.open .rays{opacity:1;animation-duration:18s}
+.gift .gpat{position:absolute;inset:0;background:var(--primary);opacity:.07;-webkit-mask:var(--pat) repeat center/96px;mask:var(--pat) repeat center/96px;pointer-events:none}
+.gift>*:not(.rays):not(.gpat){position:relative}
+.gift h2{font-size:clamp(1.8em,5vw,3.6em);color:var(--primary);text-shadow:0 4px 20px rgba(0,0,0,.4)}
+.gift .gteam{display:inline-flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:1.5px solid var(--tc,var(--primary));border-radius:999px;padding:6px 18px;font-weight:700;font-size:clamp(1em,2vw,1.4em)}
+.gift .gteam i{width:14px;height:14px;border-radius:50%;background:var(--tc)}
+.gift .stage{width:min(88vw,120vh);height:min(52vh,70vw);display:grid;place-items:center}
+.gift .box{background:none;border:0;padding:0;font-size:min(34vh,48vw);line-height:1;cursor:pointer;animation:wobble 1.1s ease-in-out infinite;filter:drop-shadow(0 20px 40px rgba(0,0,0,.45))}
+.gift .box:focus-visible{outline:none}
+.gift .prize{display:none;max-width:100%;max-height:100%;object-fit:contain;border-radius:22px;filter:drop-shadow(0 24px 50px rgba(0,0,0,.5));animation:prizeIn .9s cubic-bezier(.2,1.4,.4,1)}
+.gift .prize.emo{font-size:min(36vh,50vw);line-height:1}
+.gift.open .box{display:none}
+.gift.open .prize{display:block}
+.gift .gname{display:none;font:900 clamp(2em,6.5vw,5em) var(--head);color:var(--text);line-height:1.2;text-wrap:balance;animation:scrIn .6s .3s both}
+.gift .gdesc{display:none;color:var(--muted);font-size:clamp(1em,2.2vw,1.5em);margin:0;max-width:50ch}
+.gift.open .gname,.gift.open .gdesc{display:block}
+.gift .tap{color:var(--muted);font-size:clamp(1em,2vw,1.3em);margin:0;animation:pulse 1.6s infinite}
+.gift.open .tap{display:none}
+.gift .big{display:none}
+.gift.open .big{display:inline-block}
+@keyframes wobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg) scale(1.05)}40%{transform:rotate(8deg)}60%{transform:rotate(-5deg) scale(1.03)}80%{transform:rotate(3deg)}}
+@keyframes prizeIn{from{transform:scale(.15) rotate(-25deg);opacity:0}}
+@keyframes pulse{50%{opacity:.45}}
+.num .gmark{position:absolute;z-index:1;bottom:6%;font-size:.9em}
+.giftlist{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.gchip{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--gold-soft);border-radius:999px;padding:6px 14px 6px 8px;font-weight:700}
+.gchip img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+.gchip small{color:var(--muted);font-weight:400}
+.gedit{border:1px solid var(--panelLine);border-radius:14px;padding:14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start;margin-top:12px;background:#fff}
+.gedit .gpv{width:96px;height:96px;border-radius:12px;background:var(--panelSoft) center/contain no-repeat;display:grid;place-items:center;font-size:3em;border:1px dashed var(--panelLine)}
+@media (max-width:560px){.gedit{grid-template-columns:1fr}}
+
+
+/* database tab */
+.dbstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.dbstat div{background:var(--panelSoft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.dbstat b{font-size:1.5em;font-variant-numeric:tabular-nums}
+.dbstat span{color:var(--panelMuted);font-size:.88em}
+.dbbadge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:700;font-size:.92em}
+.dbbadge i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.dbbadge.on{background:#e3f4ec;color:#11734b}.dbbadge.off{background:#fdf1e2;color:#9a5a00}.dbbadge.err{background:#fdecec;color:#b42323}
+.dbfilter{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.dbfilter input{flex:1;min-width:180px}
+.panel .dbfilter select{width:auto;flex:none}
+.panel .dbfilter input{width:auto}
+.dbtable-wrap{overflow-x:auto;border:1px solid var(--panelLine);border-radius:12px}
+.dbtable{width:100%;border-collapse:collapse;font-size:.92em}
+.dbtable th{background:var(--panelSoft);text-align:right;padding:9px 10px;font-weight:700;white-space:nowrap;position:sticky;top:0}
+.dbtable td{padding:8px 10px;border-top:1px solid var(--panelLine);vertical-align:top}
+.dbtable tr.r:hover td{background:#f7faf8;cursor:pointer}
+.dbtable .ok{color:#11734b;font-weight:700}
+.dbtable .th{width:44px;height:34px;border-radius:6px;object-fit:cover;background:var(--panelSoft)}
+.dbtable td.n{font-variant-numeric:tabular-nums;color:var(--panelMuted)}
+.cloudnote{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:max(14px,env(safe-area-inset-left,0px));z-index:40;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:6px 14px;font-size:.85em;font-family:'Tajawal',sans-serif;backdrop-filter:blur(6px)}
+
+/* ---------- settings panel (light, neutral so it reads regardless of the game's colors) ---------- */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(10,8,30,.6);display:grid;place-items:center;padding:16px;direction:rtl}
+.modal[hidden]{display:none!important}
+.panel{background:var(--panel);color:var(--panelText);font-family:'Tajawal','Cairo',system-ui,sans-serif;font-size:15px;border-radius:20px;width:min(1080px,100%);height:min(760px,100%);display:grid;grid-template-columns:210px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.panel header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--panelLine)}
+.panel header h3{font-size:1.25em;font-family:'Tajawal',sans-serif;font-weight:900}
+.panel header .saved{color:var(--panelMuted);font-size:.9em;margin-inline-start:auto}
+.tabs{display:flex;flex-direction:column;gap:4px;padding:12px;background:var(--panelSoft);border-inline-end:1px solid var(--panelLine);overflow:auto}
+.tabs button{border:0;background:transparent;text-align:right;padding:11px 14px;border-radius:10px;font-weight:700;color:var(--panelText)}
+.tabs button.on{background:var(--panelAccent);color:#fff}
+.tabs button:hover:not(.on){background:var(--panelLine)}
+.pbody{overflow:auto;padding:20px 24px 40px}
+.pbody h4{margin:22px 0 10px;font-size:1.05em;color:var(--panelAccent)}
+.pbody h4:first-child{margin-top:0}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px 18px}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.f.wide{grid-column:1/-1}
+.f>label,.f>.lb{font-weight:700;font-size:.92em}
+.f .hint{color:var(--panelMuted);font-size:.85em}
+.panel input[type=text],.panel input[type=number],.panel input[type=password],.panel select,.panel textarea{width:100%;border:1px solid var(--panelLine);border-radius:10px;padding:9px 11px;font:inherit;background:#fff;color:var(--panelText)}
+.panel textarea{min-height:70px;resize:vertical}
+.panel input[type=color]{width:52px;height:38px;border:1px solid var(--panelLine);border-radius:10px;padding:2px;background:#fff}
+.colorrow{display:flex;align-items:center;gap:10px}
+.colorrow code{color:var(--panelMuted);direction:ltr}
+.panel input[type=range]{width:100%;accent-color:var(--panelAccent)}
+.sw{display:flex;align-items:center;gap:10px;font-weight:700;cursor:pointer}
+.sw input{width:20px;height:20px;accent-color:var(--panelAccent)}
+.imgpick{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.imgpick .pv{width:72px;height:54px;border-radius:10px;border:1px dashed var(--panelLine);background:var(--panelSoft) center/contain no-repeat;flex:none}
+.btn{border:1px solid var(--panelLine);background:#fff;color:var(--panelText);border-radius:10px;padding:8px 14px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--panelSoft)}
+.btn.pri{background:var(--panelAccent);border-color:var(--panelAccent);color:#fff}
+.btn.danger{color:#c0262d;border-color:#f3c6c8}
+.btn.danger:hover{background:#fdecec}
+.btn.sm{padding:5px 10px;font-size:.9em}
+.btn.close{background:var(--panelSoft)}
+.catlist{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.catlist button{border:1px solid var(--panelLine);background:#fff;border-radius:999px;padding:7px 14px;font-weight:700;color:var(--panelText)}
+.catlist button.on{background:var(--panelText);color:#fff;border-color:var(--panelText)}
+.qitem{border:1px solid var(--panelLine);border-radius:14px;margin-top:12px;background:#fff}
+.qitem>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:700}
+.qitem>summary::-webkit-details-marker{display:none}
+.qitem>summary .n{flex:none;width:30px;height:30px;border-radius:9px;background:var(--panelSoft);display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.qitem>summary .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qitem[open]>summary{border-bottom:1px solid var(--panelLine)}
+.qitem .qb{padding:14px;display:flex;flex-direction:column;gap:14px}
+.chrow{display:flex;align-items:center;gap:8px}
+.chrow input[type=radio]{width:20px;height:20px;accent-color:#16a34a;flex:none}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.preview-font{border:1px solid var(--panelLine);border-radius:12px;padding:14px;font-size:1.4em;background:var(--panelSoft)}
+.note{background:var(--panelSoft);border-radius:12px;padding:12px 14px;color:var(--panelMuted);line-height:1.7}
+@media (max-width:720px){
+  .panel{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr);height:100%}
+  .tabs{flex-direction:row;overflow-x:auto;border-inline-end:0;border-bottom:1px solid var(--panelLine)}
+  .tabs button{white-space:nowrap}
+  .pbody{padding:16px}
+}
+.dlg{background:var(--panel);color:var(--panelText);font-family:'Tajawal',sans-serif;border-radius:18px;padding:22px;width:min(400px,100%);display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.dlg .toolbar{justify-content:flex-start}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:100;background:#1d1a3a;color:#fff;padding:10px 18px;border-radius:12px;font-family:'Tajawal',sans-serif;font-weight:700}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app">
+  <div class="bg" id="bg"></div>
+  <div class="pattern" id="pattern"></div>
+  <div class="vign"></div>
+
+  <!-- HOME -->
+  <section class="screen home" id="s-home">
+    <div class="corner"><button class="iconbtn" data-act="settings" aria-label="الإعدادات"></button><button class="iconbtn" data-act="fs" aria-label="ملء الشاشة"></button><button class="iconbtn" id="install-btn" hidden>⬇ تثبيت التطبيق</button></div>
+    <p class="bism" id="h-bism"></p>
+    <div class="arch"><img id="h-logo" alt="" hidden><svg class="star" id="h-star" viewBox="0 0 100 100" aria-hidden="true"></svg></div>
+    <h1 id="h-title"></h1>
+    <div class="orn" aria-hidden="true"><i></i><svg viewBox="0 0 100 100"></svg><i></i></div>
+    <p class="sub" id="h-sub"></p>
+    <button class="big" id="h-start"></button>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="screen" id="s-cats" hidden>
+    <div class="bar">
+      <button class="iconbtn" data-act="home" aria-label="الرئيسية"></button>
+      <div class="grow"><img class="mini" id="c-logo" alt="" hidden><h2 id="c-title"></h2></div>
+      <span class="score" id="c-score"></span>
+      <button class="iconbtn" data-act="board" aria-label="لوحة النتائج"></button>
+      <button class="iconbtn" data-act="fs" aria-label="ملء الشاشة"></button>
+      <button class="iconbtn" data-act="settings" aria-label="الإعدادات"></button>
+      <div class="tstrip"></div>
+    </div>
+    <div class="grid" id="c-grid"></div>
+  </section>
+
+  <!-- CATEGORY NUMBERS -->
+  <section class="screen" id="s-cat" hidden>
+    <div class="bar">
+      <button class="iconbtn" data-act="cats" aria-label="رجوع للأقسام"></button>
+      <div class="grow"><img class="mini" id="n-logo" alt="" hidden></div>
+      <span class="score" id="n-score"></span>
+      <button class="iconbtn" data-act="board" aria-label="لوحة النتائج"></button>
+      <button class="iconbtn" data-act="fs" aria-label="ملء الشاشة"></button>
+      <button class="iconbtn" data-act="settings" aria-label="الإعدادات"></button>
+      <div class="tstrip"></div>
+    </div>
+    <div class="cathead"><h1 id="n-title"></h1><div class="orn" aria-hidden="true"><i></i><svg viewBox="0 0 100 100"></svg><i></i></div></div>
+    <div class="nums" id="n-grid"></div>
+  </section>
+
+  <!-- QUESTION -->
+  <section class="screen" id="s-q" hidden>
+    <div class="bar">
+      <button class="iconbtn" data-act="cat" aria-label="رجوع للأرقام"></button>
+      <div class="grow"><img class="mini" id="q-logo" alt="" hidden></div>
+      <span class="score" id="q-score"></span>
+      <button class="iconbtn" data-act="board" aria-label="لوحة النتائج"></button>
+      <button class="iconbtn" data-act="fs" aria-label="ملء الشاشة"></button>
+      <button class="iconbtn" data-act="settings" aria-label="الإعدادات"></button>
+      <div class="tstrip"></div>
+    </div>
+    <div class="qwrap">
+      <div class="qmeta"><span id="q-meta"></span><div class="timer" id="q-timer" hidden></div></div>
+      <div class="lifes" id="q-life" hidden></div>
+      <div class="qtext" id="q-text"></div>
+      <img class="qimg" id="q-img" alt="" hidden>
+      <div class="choices" id="q-choices"></div>
+      <div class="after" id="q-after" hidden><button class="big" data-act="next">متابعة</button></div>
+    </div>
+  </section>
+
+  <!-- TEAM SETUP -->
+  <section class="screen" id="s-teams" hidden>
+    <div class="bar">
+      <button class="iconbtn" data-act="home" aria-label="الرئيسية"></button>
+      <div class="grow"></div>
+      <button class="iconbtn" data-act="fs" aria-label="ملء الشاشة"></button>
+      <button class="iconbtn" data-act="settings" aria-label="الإعدادات"></button>
+    </div>
+    <div class="twrap">
+      <h1>الفرق المتنافسة</h1>
+      <div class="orn" aria-hidden="true"><i></i><svg viewBox="0 0 100 100"></svg><i></i></div>
+      <div class="tsetup" id="t-list"></div>
+      <div class="btns"><button class="big" id="t-go">ابدأ المسابقة</button><button class="ghost" id="t-solo">لعب فردي بدون فرق</button></div>
+    </div>
+  </section>
+
+  <!-- SCOREBOARD -->
+  <section class="screen" id="s-board" hidden>
+    <div class="bar">
+      <button class="iconbtn" data-act="resume" aria-label="رجوع"></button>
+      <div class="grow"></div>
+      <button class="iconbtn" data-act="fs" aria-label="ملء الشاشة"></button>
+      <button class="iconbtn" data-act="settings" aria-label="الإعدادات"></button>
+    </div>
+    <div class="board"><h1>لوحة النتائج</h1><div class="board" id="b-list" style="flex:none"></div>
+      <div class="btns" style="margin-top:14px"><button class="big" data-act="resume">متابعة اللعب</button><button class="ghost" data-act="end">إنهاء الجولة وإعلان الفائز</button></div></div>
+  </section>
+
+  <!-- END OF ROUND -->
+  <section class="screen" id="s-end" hidden>
+    <div class="endwrap">
+      <p class="bism">انتهت الجولة</p>
+      <h1 id="e-title"></h1>
+      <div class="orn" aria-hidden="true"><i></i><svg viewBox="0 0 100 100"></svg><i></i></div>
+      <div id="e-body" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px"></div>
+      <div class="btns" style="margin-top:10px"><button class="big" data-act="newround">جولة جديدة</button><button class="ghost" data-act="board">لوحة النتائج</button><button class="ghost" data-act="home">الرئيسية</button></div>
+    </div>
+  </section>
+</div>
+
+<div class="pop" id="pop" hidden><div class="popcard" id="popcard"></div></div>
+<div class="gift" id="gift" hidden>
+  <div class="rays"></div><div class="gpat"></div>
+  <h2 id="g-title"></h2>
+  <span class="gteam" id="g-team" hidden></span>
+  <div class="stage"><button class="box" id="g-box" aria-label="افتح الهدية">🎁</button><img class="prize" id="g-img" alt=""><div class="prize emo" id="g-emo"></div></div>
+  <p class="tap" id="g-tap">اضغط على الصندوق لفتح الهدية</p>
+  <div class="gname" id="g-name"></div>
+  <p class="gdesc" id="g-desc"></p>
+  <button class="big" id="g-ok">استلام الهدية</button>
+</div>
+<canvas id="fx"></canvas>
+<div class="modal" id="settings" hidden></div>
+<div class="modal" id="dialog" hidden></div>
+<input type="file" id="filepick" hidden>
+<div class="cloudnote" id="cloudnote" hidden></div>
+
+<script>
+(() => {
+document.documentElement.lang = 'ar';
+document.documentElement.dir = 'rtl';
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const LETTERS = ['أ','ب','ج','د','هـ','و'];
+const STAR8 = '<g fill="none" stroke="currentColor" stroke-width="3"><rect x="20" y="20" width="60" height="60"/><rect x="20" y="20" width="60" height="60" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="17"/></g><circle cx="50" cy="50" r="6" fill="currentColor"/>';
+const ORN = '<path fill="currentColor" d="M50 0l11 25 24-10-10 24 25 11-25 11 10 24-24-10-11 25-11-25-24 10 10-24L0 50l25-11-10-24 24 10z"/>';
+const PATTERN_SVG = "<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='#000' stroke-width='1.3'><path d='M40 16l7 17 17 7-17 7-7 17-7-17-17-7 17-7z'/><rect x='23' y='23' width='34' height='34'/><rect x='23' y='23' width='34' height='34' transform='rotate(45 40 40)'/><path d='M0 0l16 16M80 0L64 16M0 80l16-16M80 80L64 64M40 0v6M40 74v6M0 40h6M74 40h6'/><circle cx='0' cy='0' r='9'/><circle cx='80' cy='0' r='9'/><circle cx='0' cy='80' r='9'/><circle cx='80' cy='80' r='9'/></g></svg>";
+document.documentElement.style.setProperty('--pat', `url("data:image/svg+xml,${encodeURIComponent(PATTERN_SVG)}")`);
+document.querySelectorAll('.orn svg').forEach(s => s.innerHTML = ORN);
+document.getElementById('h-star').innerHTML = STAR8;
+const ICONS = {
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
+  expand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>'
+};
+document.querySelectorAll('[data-act=settings]').forEach(b => b.innerHTML = ICONS.gear);
+document.querySelectorAll('.iconbtn[data-act=home]').forEach(b => b.innerHTML = ICONS.home + '<span>الرئيسية</span>');
+document.querySelectorAll('.iconbtn[data-act=cats],.iconbtn[data-act=cat],.iconbtn[data-act=resume]').forEach(b => b.innerHTML = ICONS.back + '<span>رجوع</span>');
+document.querySelectorAll('.iconbtn[data-act=board]').forEach(b => { b.innerHTML = ICONS.trophy + '<span>النتائج</span>'; });
+document.querySelectorAll('.iconbtn[data-act=fs]').forEach(b => b.innerHTML = ICONS.expand);
+
+/* ---------------- storage (IndexedDB, falls back to memory) ---------------- */
+const DB = {
+  db: null,
+  async open() {
+    try {
+      this.db = await new Promise((res, rej) => {
+        const r = indexedDB.open('quiz-app', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('kv');
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+    } catch (e) { this.db = null; }
+  },
+  async get(k) {
+    if (!this.db) return undefined;
+    try { return await new Promise((res, rej) => { const r = this.db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+    catch (e) { return undefined; }
+  },
+  async set(k, v) {
+    if (!this.db) return false;
+    try { await new Promise((res, rej) => { const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; }
+    catch (e) { return false; }
+  }
+};
+
+/* ---------------- default data ---------------- */
+function Q(text, choices, correct, points = 1, explain = '') { return { id: uid(), text, image: '', choices, correct, points, explain }; }
+const THEMES = [
+  ['زمردي ذهبي', { bg: '#082826', bg2: '#0f4a43', primary: '#d9ad5b', accent: '#2f8f83', text: '#fbf6e9', muted: '#b5cec6', cardText: '#ffffff', correct: '#2fae6b', wrong: '#c8453b' }],
+  ['أزرق عثماني', { bg: '#0b1a33', bg2: '#16325c', primary: '#e2b866', accent: '#2c6ea6', text: '#f8f4ea', muted: '#a9bad6', cardText: '#ffffff', correct: '#2fae6b', wrong: '#c8453b' }],
+  ['فيروزي أندلسي', { bg: '#05303a', bg2: '#0b5560', primary: '#ecc77a', accent: '#d9734e', text: '#fdf8ee', muted: '#a8d0d2', cardText: '#ffffff', correct: '#33b27a', wrong: '#cf4b3f' }],
+  ['عنابي ملكي', { bg: '#2e0a14', bg2: '#5a1626', primary: '#e3b766', accent: '#8a2b40', text: '#fbf3ea', muted: '#dbb3ba', cardText: '#ffffff', correct: '#2fae6b', wrong: '#d4553f' }],
+  ['ليلي بنفسجي', { bg: '#1a1233', bg2: '#33235e', primary: '#e6c072', accent: '#6b4fb3', text: '#f9f5ee', muted: '#c2b6e0', cardText: '#ffffff', correct: '#2fae6b', wrong: '#c8453b' }]
+];
+function defaults() {
+  return {
+    v: 2,
+    settings: {
+      bism: 'بسم الله الرحمن الرحيم',
+      title: 'مسابقة الأسئلة', subtitle: 'اختر قسماً، ثم اختر رقماً، وأجب على السؤال', startText: 'ابدأ اللعب',
+      logo: '', logoSize: 230, logoFrame: true, homeBg: '', appBg: '', overlay: 0.45, pattern: true, patternOpacity: 0.10,
+      font: 'Tajawal', headFont: 'El Messiri', bismFont: 'Aref Ruqaa', customFont: '', scale: 1, radius: 16,
+      colors: { ...THEMES[0][1] },
+      catsTitle: 'الأقسام',
+      showScore: true, lockAnswered: true, shuffle: false, showPoints: true, sounds: true,
+      timer: { enabled: false, seconds: 30 },
+      correctPop: { enabled: true, title: 'إجابة صحيحة!', message: 'أحسنت، بارك الله فيك', emoji: '🌟', image: '', confetti: true, sound: true, customSound: '' },
+      wrongPop: { enabled: true, title: 'إجابة خاطئة', message: 'لا بأس، حاول في السؤال القادم', emoji: '😔', image: '', rain: true, shake: true, sound: true, customSound: '', showAnswer: true },
+      pin: '',
+      autoEnd: true,
+      teams: { enabled: true, mode: 'turns', list: [
+        { id: 't1', name: 'الفريق الأول', color: '#2f8f83' },
+        { id: 't2', name: 'الفريق الثاني', color: '#b8453b' }] },
+      lifelines: { enabled: true, fifty: 1, swap: 1, time: 1, extra: 15 },
+      gifts: { enabled: true, mode: 'chance', chance: 40, order: 'random', showMark: true, title: 'مبروك! ربحت هدية', list: [
+        { id: 'g1', name: 'قسيمة شرائية', desc: 'بقيمة 100 ريال', emoji: '🎫', image: '', qty: 0 },
+        { id: 'g2', name: 'مصحف فاخر', desc: '', emoji: '📖', image: '', qty: 2 },
+        { id: 'g3', name: 'ساعة يد', desc: '', emoji: '⌚', image: '', qty: 1 }] }
+    },
+    categories: [
+      { id: uid(), name: 'ثقافة عامة', icon: '📖', color: '#1f6f63', image: '', questions: [
+        Q('ما هي عاصمة اليابان؟', ['بكين', 'طوكيو', 'سيول', 'بانكوك'], 1, 1, 'طوكيو هي عاصمة اليابان وأكبر مدنها.'),
+        Q('كم عدد أيام السنة الكبيسة؟', ['364', '365', '366', '367'], 2),
+        Q('ما أكبر محيط في العالم؟', ['الأطلسي', 'الهندي', 'المتجمد الشمالي', 'الهادئ'], 3),
+        Q('من مؤلف رواية «البؤساء»؟', ['فيكتور هوغو', 'تولستوي', 'شكسبير', 'نجيب محفوظ'], 0, 2),
+        Q('كم عدد ألوان قوس قزح؟', ['5', '6', '7', '8'], 2),
+        Q('ما العملة الرسمية في المملكة المتحدة؟', ['اليورو', 'الجنيه الإسترليني', 'الدولار', 'الفرنك'], 1)
+      ]},
+      { id: uid(), name: 'جغرافيا', icon: '🌍', color: '#2c5e8c', image: '', questions: [
+        Q('ما أطول نهر في العالم؟', ['الأمازون', 'النيل', 'المسيسيبي', 'اليانغتسي'], 1),
+        Q('في أي قارة تقع دولة البرازيل؟', ['أفريقيا', 'آسيا', 'أمريكا الجنوبية', 'أوروبا'], 2),
+        Q('ما أعلى جبل في العالم؟', ['كليمنجارو', 'إيفرست', 'الألب', 'K2'], 1),
+        Q('ما أكبر صحراء حارة في العالم؟', ['الصحراء الكبرى', 'الربع الخالي', 'صحراء غوبي', 'كالاهاري'], 0, 2)
+      ]},
+      { id: uid(), name: 'علوم', icon: '🔭', color: '#8a5a2b', image: '', questions: [
+        Q('ما الرمز الكيميائي للذهب؟', ['Ag', 'Go', 'Au', 'Gd'], 2),
+        Q('ما الكوكب الأقرب إلى الشمس؟', ['الزهرة', 'المريخ', 'عطارد', 'الأرض'], 2),
+        Q('كم عدد عظام جسم الإنسان البالغ؟', ['186', '206', '226', '306'], 1, 2),
+        Q('ما الغاز الذي تمتصه النباتات من الجو؟', ['الأكسجين', 'النيتروجين', 'ثاني أكسيد الكربون', 'الهيليوم'], 2),
+        Q('ما وحدة قياس القوة؟', ['الجول', 'النيوتن', 'الواط', 'الفولت'], 1)
+      ]},
+      { id: uid(), name: 'رياضة', icon: '⚽', color: '#7a2840', image: '', questions: [
+        Q('كم عدد لاعبي فريق كرة القدم داخل الملعب؟', ['9', '10', '11', '12'], 2),
+        Q('كل كم سنة تقام الألعاب الأولمبية الصيفية؟', ['سنتين', '3 سنوات', '4 سنوات', '5 سنوات'], 2),
+        Q('ما مدة شوط كرة السلة في دوري NBA؟', ['10 دقائق', '12 دقيقة', '15 دقيقة', '20 دقيقة'], 1, 2)
+      ]}
+    ]
+  };
+}
+
+let S = defaults();
+const newProgress = () => ({ answers: {}, by: {}, score: 0, teamScores: {}, turn: 0, active: null, life: {}, started: false, gifts: [], giftsUsed: {} });
+let P = newProgress();
+let cur = { screen: 'home', catId: null, qId: null };
+let saveTimer = null;
+
+function merge(base, over) {
+  if (!over || typeof over !== 'object' || Array.isArray(base)) return over === undefined ? base : over;
+  const out = { ...base };
+  for (const k in over) out[k] = (base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) ? merge(base[k], over[k]) : over[k];
+  return out;
+}
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    saveTimer = null;
+    const ok = await DB.set('state', S); await DB.set('progress', P);
+    if (SITE && !applyingRemote) LS.set('quiz-dirty', '1');
+    if (Cloud.on) return cloudSync();
+    const el = $('#saved'); if (el) el.textContent = ok ? 'تم الحفظ في هذا المتصفح' : 'الحفظ غير متاح في هذا المتصفح، استخدم التصدير';
+  }, Cloud.on ? 700 : 300);
+}
+
+/* ---------------- cloud database (artifact db + assets) ----------------
+   Layout: quiz/settings (one doc), categories/<id> (name, icon, color, image, order),
+   questions/<id> (catId, order, text, choices[], correct, points, explain, image, gift).
+   Images live in assets; rows hold "/_blob/<id>". Custom sounds stay on this device. */
+const Cloud = { db: null, assets: null, user: null, on: false, canWrite: false, synced: {}, busy: false, again: false, status: 'local', err: '', live: {} };
+function stable(v) {
+  if (Array.isArray(v)) return '[' + v.map(stable).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).sort().filter(k => v[k] !== undefined).map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+function cloudDocs(state) {
+  const out = {};
+  const st = JSON.parse(JSON.stringify(state.settings));
+  st.correctPop.customSound = ''; st.wrongPop.customSound = '';
+  out['quiz/settings'] = { settings: st, v: state.v || 2 };
+  state.categories.forEach((c, i) => {
+    out['categories/' + c.id] = { name: c.name || '', icon: c.icon || '', color: c.color || '', image: c.image || '', order: i };
+    c.questions.forEach((q, j) => {
+      out['questions/' + q.id] = { catId: c.id, order: j, text: q.text || '', choices: q.choices || [], correct: +q.correct || 0, points: +q.points || 0, explain: q.explain || '', image: q.image || '', gift: !!q.gift };
+    });
+  });
+  return out;
+}
+function setCloudStatus(status, err) {
+  Cloud.status = status; Cloud.err = err || '';
+  const txt = { saving: 'جارٍ الحفظ في قاعدة البيانات…', saved: 'محفوظ في قاعدة البيانات', error: 'تعذر الحفظ في قاعدة البيانات', readonly: 'قاعدة البيانات للقراءة فقط', local: 'محفوظ في هذا المتصفح فقط', loading: 'جارٍ تحميل قاعدة البيانات…', offline: 'قاعدة البيانات غير متاحة الآن، يعمل البرنامج بالنسخة المحلية' }[status] || '';
+  const el = $('#saved'); if (el) el.textContent = txt + (err ? ' (' + err + ')' : '');
+  const n = $('#cloudnote'); n.textContent = txt; n.hidden = !['saving', 'error', 'loading', 'offline'].includes(status);
+}
+async function cloudSync() {
+  if (!Cloud.on || !Cloud.canWrite) return;
+  if (Cloud.busy) { Cloud.again = true; return; }
+  Cloud.busy = true; setCloudStatus('saving');
+  let err = '';
+  try {
+    const docs = cloudDocs(S);
+    for (const [path, body] of Object.entries(docs)) {
+      const js = stable(body);
+      if (Cloud.synced[path] === js) continue;
+      if (js.length > 250000) { err = 'ملف كبير'; continue; }
+      try { await Cloud.db.doc(path).set(body); Cloud.synced[path] = js; }
+      catch (e) {
+        err = e && e.code || 'خطأ';
+        if (e && e.code === 'unavailable') { await new Promise(r => setTimeout(r, 600 + Math.random() * 600)); try { await Cloud.db.doc(path).set(body); Cloud.synced[path] = js; err = ''; } catch (e2) {} }
+        if (e && (e.code === 'quota_exceeded' || e.code === 'revoked')) break;
+      }
+    }
+    for (const path of Object.keys(Cloud.synced)) {
+      if (docs[path]) continue;
+      try { await Cloud.db.doc(path).delete(); delete Cloud.synced[path]; } catch (e) { err = e && e.code || 'خطأ'; }
+    }
+  } finally {
+    Cloud.busy = false;
+    setCloudStatus(err ? 'error' : 'saved', err === 'quota_exceeded' ? 'امتلأت المساحة' : err);
+    if (Cloud.again) { Cloud.again = false; cloudSync(); }
+  }
+}
+function buildFromCloud(stBody, catRows, qRows, local) {
+  const settings = merge(defaults().settings, (stBody && stBody.settings) || {});
+  settings.correctPop.customSound = local.settings.correctPop.customSound || '';
+  settings.wrongPop.customSound = local.settings.wrongPop.customSound || '';
+  const cats = catRows.map(r => ({ id: r.id, name: r.name, icon: r.icon, color: r.color, image: r.image, _o: r.order ?? 0, questions: [] })).sort((a, b) => a._o - b._o);
+  qRows.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).forEach(q => {
+    const c = cats.find(x => x.id === q.catId); if (!c) return;
+    c.questions.push({ id: q.id, text: q.text, choices: Array.isArray(q.choices) ? q.choices.slice() : [], correct: q.correct || 0, points: q.points ?? 1, explain: q.explain || '', image: q.image || '', gift: !!q.gift });
+  });
+  cats.forEach(c => delete c._o);
+  return { v: 2, settings, categories: cats };
+}
+const rowsOf = snap => snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function markSynced(stSnap, cSnap, qSnap) {
+  Cloud.synced = {};
+  if (stSnap && stSnap.exists) Cloud.synced['quiz/settings'] = stable(stSnap.data());
+  cSnap.docs.forEach(d => Cloud.synced['categories/' + d.id] = stable(d.data()));
+  qSnap.docs.forEach(d => Cloud.synced['questions/' + d.id] = stable(d.data()));
+}
+async function dataUrlToBlob(u) { return (await fetch(u)).blob(); }
+function fontType(bytes) {
+  const sig = String.fromCharCode(...bytes.slice(0, 4));
+  return sig === 'wOF2' ? 'font/woff2' : sig === 'wOFF' ? 'font/woff' : sig === 'OTTO' ? 'font/otf' : 'font/ttf';
+}
+async function uploadBlob(blob, type) {
+  const r = await Cloud.assets.upload(blob, type ? { type } : undefined);
+  return '/_blob/' + r.id;
+}
+async function uploadDataUrl(u, isFont) {
+  const blob = await dataUrlToBlob(u);
+  let type = blob.type;
+  if (isFont) type = fontType(new Uint8Array(await blob.slice(0, 4).arrayBuffer()));
+  return uploadBlob(blob, type);
+}
+/* every image/font field in the quiz, as [object, key, isFont] */
+function mediaFields(state) {
+  const st = state.settings, f = [[st, 'logo'], [st, 'homeBg'], [st, 'appBg'], [st.correctPop, 'image'], [st.wrongPop, 'image'], [st, 'customFont', true]];
+  (st.gifts?.list || []).forEach(g => f.push([g, 'image']));
+  state.categories.forEach(c => { f.push([c, 'image']); c.questions.forEach(q => f.push([q, 'image'])); });
+  return f;
+}
+async function migrateMedia(state, onProgress) {
+  const todo = mediaFields(state).filter(([o, k]) => typeof o[k] === 'string' && o[k].startsWith('data:'));
+  let done = 0, failed = 0;
+  for (const [o, k, isFont] of todo) {
+    try { o[k] = await uploadDataUrl(o[k], isFont); } catch (e) { failed++; }
+    done++; onProgress && onProgress(done, todo.length);
+  }
+  return { total: todo.length, failed };
+}
+async function storeImage(file, max) {
+  const d = await readImage(file, max);
+  if (!Cloud.on || !Cloud.assets) return d;
+  try { return await uploadDataUrl(d); }
+  catch (e) { toast('تعذر رفع الصورة إلى قاعدة البيانات، حاول مرة أخرى'); throw e; }
+}
+async function cloudInit(local) {
+  if (!window.claude || !window.claude.use) return;
+  try { Cloud.db = await window.claude.use('db'); } catch (e) { Cloud.db = null; }
+  if (!Cloud.db) return;
+  try { Cloud.user = await window.claude.use('user'); } catch (e) { Cloud.user = null; }
+  try { Cloud.canWrite = Cloud.user ? (await Cloud.user.canEdit()) : false; } catch (e) { Cloud.canWrite = false; }
+  if (Cloud.canWrite) { try { Cloud.assets = await window.claude.use('assets'); } catch (e) { Cloud.assets = null; } }
+  setCloudStatus('loading');
+  let stSnap, cSnap, qSnap;
+  try {
+    [stSnap, cSnap, qSnap] = await Promise.race([
+      Promise.all([Cloud.db.doc('quiz/settings').get(), Cloud.db.collection('categories').get(), Cloud.db.collection('questions').get()]),
+      new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout' }), 10000))]);
+  } catch (e) { setCloudStatus('offline'); return; }
+  Cloud.on = true;
+  const empty = !stSnap.exists && cSnap.empty && qSnap.empty;
+  if (empty) {
+    if (!Cloud.canWrite) { setCloudStatus('readonly'); return; }
+    /* first run: move this device's quiz into the database, images included */
+    S = JSON.parse(JSON.stringify(local));
+    if (Cloud.assets) await migrateMedia(S, (d, t) => { $('#cloudnote').hidden = false; $('#cloudnote').textContent = `جارٍ رفع الصور إلى قاعدة البيانات ${d} من ${t}`; });
+    await DB.set('state', S); await applyTheme(); refresh();
+    await cloudSync(); toast('تم نقل المسابقة إلى قاعدة البيانات');
+  } else {
+    markSynced(stSnap, cSnap, qSnap);
+    S = buildFromCloud(stSnap.exists ? stSnap.data() : null, rowsOf(cSnap), rowsOf(qSnap), local);
+    await DB.set('state', S); await applyTheme(); refresh();
+    setCloudStatus(Cloud.canWrite ? 'saved' : 'readonly');
+  }
+  cloudListen();
+}
+/* live updates from other devices / editors; our own writes echo back identical and are ignored */
+function cloudListen() {
+  const L = Cloud.live;
+  let timer = null;
+  const maybeApply = () => {
+    if (!L.st || !L.c || !L.q) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (Cloud.busy || saveTimer) return maybeApply();
+      const incoming = {};
+      if (L.st.exists) incoming['quiz/settings'] = stable(L.st.data());
+      L.c.docs.forEach(d => incoming['categories/' + d.id] = stable(d.data()));
+      L.q.docs.forEach(d => incoming['questions/' + d.id] = stable(d.data()));
+      const keys = new Set([...Object.keys(incoming), ...Object.keys(Cloud.synced)]);
+      let diff = false; for (const k of keys) if (incoming[k] !== Cloud.synced[k]) { diff = true; break; }
+      if (!diff) return;
+      Cloud.synced = incoming;
+      S = buildFromCloud(L.st.exists ? L.st.data() : null, rowsOf(L.c), rowsOf(L.q), S);
+      DB.set('state', S); applyTheme();
+      if ($('#settings').hidden) refresh(); else toast('وصلت تحديثات من جهاز آخر');
+    }, 400);
+  };
+  const ok = snap => !snap.metadata.hasPendingWrites && !snap.metadata.fromCache;
+  const onErr = () => {};
+  Cloud.db.doc('quiz/settings').onSnapshot(sn => { if (ok(sn)) { L.st = sn; maybeApply(); } }, onErr);
+  Cloud.db.collection('categories').onSnapshot(sn => { if (ok(sn)) { L.c = sn; maybeApply(); } }, onErr);
+  Cloud.db.collection('questions').onSnapshot(sn => { if (ok(sn)) { L.q = sn; maybeApply(); } }, onErr);
+}
+async function inlineBlobs(state) {
+  const copy = JSON.parse(JSON.stringify(state));
+  for (const [o, k] of mediaFields(copy)) {
+    if (typeof o[k] === 'string' && o[k].startsWith('/_blob/')) {
+      try { const b = await (await fetch(o[k])).blob(); o[k] = await readDataURL(b); } catch (e) {}
+    }
+  }
+  return copy;
+}
+function saveProgress() { DB.set('progress', P); }
+
+/* ---------------- theme ---------------- */
+let customFontLoaded = '';
+async function applyTheme() {
+  const st = S.settings, c = st.colors, r = document.documentElement.style;
+  r.setProperty('--bg', c.bg); r.setProperty('--bg2', c.bg2); r.setProperty('--primary', c.primary);
+  r.setProperty('--accent', c.accent); r.setProperty('--text', c.text); r.setProperty('--muted', c.muted);
+  r.setProperty('--cardText', c.cardText); r.setProperty('--correct', c.correct); r.setProperty('--wrong', c.wrong);
+  r.setProperty('--overlay', st.overlay); r.setProperty('--scale', st.scale); r.setProperty('--radius', st.radius + 'px');
+  r.setProperty('--logoSize', st.logoSize + 'px');
+  r.setProperty('--pattern', st.pattern ? st.patternOpacity : 0);
+  if (st.customFont && customFontLoaded !== st.customFont) {
+    try { const ff = new FontFace('CustomFont', `url(${st.customFont})`); await ff.load(); document.fonts.add(ff); customFontLoaded = st.customFont; } catch (e) { toast('تعذر تحميل ملف الخط'); }
+  }
+  const fam = n => (n === 'custom' ? "'CustomFont'" : `'${n}'`) + ", 'Cairo', 'Tajawal', system-ui, sans-serif";
+  r.setProperty('--font', fam(st.font)); r.setProperty('--head', fam(st.headFont)); r.setProperty('--bism', fam(st.bismFont || 'Aref Ruqaa'));
+}
+function setBg(img) {
+  const bg = $('#bg');
+  if (img) { bg.style.backgroundImage = `url(${img})`; bg.classList.add('has-img'); }
+  else { bg.style.backgroundImage = ''; bg.classList.remove('has-img'); }
+}
+
+/* ---------------- screens ---------------- */
+function show(name) {
+  ['home', 'cats', 'cat', 'q', 'teams', 'board', 'end'].forEach(n => $('#s-' + n).hidden = n !== name);
+  if (!['board', 'end'].includes(name)) cur.back = name;
+  cur.screen = name;
+  if (name !== 'q') stopTimer();
+  renderStrips();
+}
+function logoInto(img) { const l = S.settings.logo; img.hidden = !l; if (l) img.src = l; }
+function scoreInto(el) { el.hidden = !S.settings.showScore || teamsOn(); el.textContent = 'النقاط: ' + P.score; }
+const findCat = id => S.categories.find(c => c.id === id);
+
+function renderHome() {
+  const st = S.settings; show('home'); setBg(st.homeBg || st.appBg);
+  logoInto($('#h-logo')); $('#h-star').style.display = st.logo ? 'none' : '';
+  fitArch();
+  $('#h-bism').textContent = st.bism || ''; $('#h-bism').hidden = !st.bism;
+  $('#h-title').textContent = st.title; $('#h-sub').textContent = st.subtitle;
+  $('#h-sub').hidden = !st.subtitle; $('#h-start').textContent = st.startText || 'ابدأ';
+}
+/* shape the arch around the logo: its proportions follow the image, and the image sits below the curve */
+function fitArch() {
+  const arch = document.querySelector('.arch'), img = $('#h-logo'), st = S.settings;
+  arch.classList.toggle('plain', !!st.logo && st.logoFrame === false);
+  const set = () => {
+    if (!st.logo || !img.naturalWidth) { arch.style.setProperty('--ar', .83); arch.style.setProperty('--archTop', '22%'); return; }
+    const r = img.naturalWidth / img.naturalHeight;
+    if (st.logoFrame === false) { arch.style.setProperty('--ar', r.toFixed(3)); return; }
+    /* inner box is 76% wide; the curve takes the top part, more of it when the arch is narrow */
+    const ar = Math.max(.7, Math.min(1.7, r * .95));
+    const top = ar < 1 ? 24 : ar < 1.3 ? 30 : 34;
+    arch.style.setProperty('--ar', ar.toFixed(3)); arch.style.setProperty('--archTop', top + '%');
+  };
+  if (img.complete) set(); else img.onload = set;
+}
+function renderCats() {
+  const st = S.settings; show('cats'); setBg(st.appBg);
+  logoInto($('#c-logo')); $('#c-title').textContent = st.catsTitle || 'الأقسام'; scoreInto($('#c-score'));
+  const g = $('#c-grid'); g.innerHTML = '';
+  if (!S.categories.length) { g.innerHTML = '<p>لا توجد أقسام بعد. أضف قسماً من الإعدادات.</p>'; return; }
+  S.categories.forEach(cat => {
+    const done = cat.questions.filter(q => P.answers[q.id]).length;
+    const b = document.createElement('button'); b.className = 'cat'; b.style.setProperty('--c', cat.color);
+    b.innerHTML = (cat.image ? `<img src="${cat.image}" alt="">` : '<span class="cpat"></span>') + '<span class="shade"></span><span class="frame"></span>' +
+      (cat.icon ? `<span class="ic">${esc(cat.icon)}</span>` : '') +
+      `<b>${esc(cat.name)}</b><small>${cat.questions.length} سؤال · أُجيب ${done}</small>` +
+      `<span class="prog"><i style="width:${cat.questions.length ? done / cat.questions.length * 100 : 0}%"></i></span>`;
+    b.onclick = () => { cur.catId = cat.id; renderCat(); };
+    g.appendChild(b);
+  });
+  layoutCats();
+}
+/* fit section cards to their count and the screen: try every column count, keep the one whose
+   cells come closest to an arch shape (a bit taller than wide) with the fewest empty slots */
+function layoutCats() {
+  const g = $('#c-grid'), cards = g.querySelectorAll('.cat'), n = cards.length;
+  if (!n || $('#s-cats').hidden) return;
+  const W = g.clientWidth, H = Math.max(g.clientHeight, 200);
+  const gap = W < 520 ? 14 : 20, MINH = 170, TARGET = W > H ? 1.1 : 0.75;
+  let best = null;
+  for (let c = 1; c <= n; c++) {
+    const r = Math.ceil(n / c);
+    if (Math.ceil(n / (c - 1 || 1)) === r && c > 1) continue; /* same rows, more empty slots */
+    const cw = (W - gap * (c - 1)) / c; if (cw < 130 && c > 1) break;
+    const ch = Math.max(MINH, (H - gap * (r - 1)) / r);
+    const score = Math.abs(Math.log(cw / ch / TARGET)) + (r * c - n) / n;
+    if (!best || score < best.score) best = { score, cw, ch, r };
+  }
+  const cw = Math.min(best.cw, best.ch * 1.6), ch = best.ch;
+  g.style.setProperty('--gap', gap + 'px');
+  g.style.alignContent = best.r * ch + gap * (best.r - 1) > H + 1 ? 'flex-start' : 'center';
+  g.style.setProperty('--cw', Math.floor(cw) + 'px');
+  g.style.setProperty('--ch', Math.floor(ch) + 'px');
+  g.style.setProperty('--av', Math.round(Math.min(cw * .5, ch * .42)) + 'px');
+  g.style.setProperty('--cs', Math.max(.8, Math.min(1.9, Math.min(cw, ch * .9) / 240)).toFixed(2));
+}
+addEventListener('resize', () => { if (cur.screen === 'cats') layoutCats(); if (cur.screen === 'cat') layoutNums(); });
+function renderCat() {
+  const cat = findCat(cur.catId); if (!cat) return renderCats();
+  const st = S.settings; show('cat'); setBg(cat.image && !st.appBg ? '' : st.appBg);
+  logoInto($('#n-logo')); scoreInto($('#n-score')); $('#n-title').textContent = (cat.icon ? cat.icon + ' ' : '') + cat.name;
+  const g = $('#n-grid'); g.innerHTML = '';
+  if (!cat.questions.length) { g.innerHTML = '<p>لا توجد أسئلة في هذا القسم.</p>'; return; }
+  cat.questions.forEach((q, i) => {
+    const a = P.answers[q.id];
+    const b = document.createElement('button'); b.className = 'num' + (a ? ' ' + a : '');
+    b.innerHTML = `<span class="in"><span class="nn">${i + 1}</span>` +
+      (st.showPoints ? `<span class="pts">${q.points} ${q.points == 1 ? 'نقطة' : 'نقاط'}</span>` : '') + '</span>' +
+      (a ? `<span class="mark">${a === 'right' ? '✓' : '✗'}</span>` : '') +
+      (!a && q.gift && S.settings.gifts.enabled && S.settings.gifts.mode === 'marked' && S.settings.gifts.showMark ? '<span class="gmark">🎁</span>' : '');
+    b.setAttribute('aria-label', 'السؤال ' + (i + 1));
+    if (a && st.lockAnswered) b.disabled = true;
+    b.onclick = () => openQuestion(q.id);
+    g.appendChild(b);
+  });
+  layoutNums();
+}
+/* biggest square tile that lets every number fit on screen; tiles stay centered */
+function layoutNums() {
+  const g = $('#n-grid'), n = g.querySelectorAll('.num').length;
+  if (!n || $('#s-cat').hidden) return;
+  const W = g.clientWidth, H = Math.max(g.clientHeight, 160);
+  let best = 0, bestGap = 12;
+  for (let c = 1; c <= n; c++) {
+    const r = Math.ceil(n / c);
+    if (c > 1 && Math.ceil(n / (c - 1)) === r) continue;
+    const gap = Math.max(8, Math.min(24, Math.min(W / c, H / r) * .07));
+    const sz = Math.min((W - gap * (c - 1)) / c, (H - gap * (r - 1)) / r);
+    if (sz > best) { best = sz; bestGap = gap; }
+  }
+  const sz = Math.max(84, Math.min(best, 300));
+  g.style.setProperty('--ns', Math.floor(sz) + 'px');
+  g.style.setProperty('--ng', Math.round(bestGap) + 'px');
+  g.style.alignContent = best < 84 ? 'flex-start' : 'center';
+}
+
+let answered = false, order = [];
+function openQuestion(qId) {
+  const cat = findCat(cur.catId); const q = cat && cat.questions.find(x => x.id === qId); if (!q) return renderCat();
+  cur.qId = qId; answered = false; show('q');
+  const idx = cat.questions.indexOf(q);
+  logoInto($('#q-logo')); scoreInto($('#q-score'));
+  $('#q-meta').textContent = `${cat.name} · السؤال ${idx + 1}` + (S.settings.showPoints ? ` · ${q.points} ${q.points == 1 ? 'نقطة' : 'نقاط'}` : '');
+  $('#q-text').innerHTML = '<i class="cn"></i><i class="cn"></i><i class="cn"></i><i class="cn"></i>' + esc(q.text);
+  const im = $('#q-img'); im.hidden = !q.image; if (q.image) im.src = q.image;
+  order = q.choices.map((_, i) => i);
+  if (S.settings.shuffle) order.sort(() => Math.random() - .5);
+  const box = $('#q-choices'); box.innerHTML = '';
+  order.forEach((ci, pos) => {
+    const b = document.createElement('button'); b.className = 'choice'; b.dataset.ci = ci;
+    b.innerHTML = `<span class="l">${LETTERS[pos] || pos + 1}</span><span class="t">${esc(q.choices[ci])}</span>`;
+    b.onclick = () => answer(ci);
+    box.appendChild(b);
+  });
+  $('#q-after').hidden = true;
+  startTimer();
+  renderLife();
+}
+function answer(ci) {
+  if (answered) return; answered = true; stopTimer();
+  const cat = findCat(cur.catId); const q = cat.questions.find(x => x.id === cur.qId);
+  const ok = ci === q.correct;
+  document.querySelectorAll('#q-choices .choice').forEach(b => {
+    b.disabled = true; const i = +b.dataset.ci;
+    if (i === q.correct) b.classList.add('is-right'); else if (i === ci) b.classList.add('is-wrong');
+  });
+  const prev = P.answers[q.id], pts = +q.points || 0;
+  if (prev === 'right') { P.score -= pts; if (P.by[q.id] && P.teamScores[P.by[q.id]] != null) P.teamScores[P.by[q.id]] -= pts; }
+  P.answers[q.id] = ok ? 'right' : 'wrong';
+  if (ok) P.score += pts;
+  let team = null;
+  if (teamsOn()) {
+    team = activeTeam(); P.by[q.id] = team.id;
+    if (ok) P.teamScores[team.id] = (P.teamScores[team.id] || 0) + pts;
+    if (S.settings.teams.mode === 'turns') { const L = S.settings.teams.list; P.active = L[(L.indexOf(team) + 1) % L.length].id; }
+  }
+  saveProgress(); scoreInto($('#q-score')); renderStrips(ok && team ? team.id : null); renderLife();
+  pendingGift = ok ? pickGift(q, team) : null;
+  showResult(ok, q, ci === -1, team);
+}
+
+/* timer */
+let tInt = null;
+function startTimer() {
+  const t = S.settings.timer, box = $('#q-timer'); stopTimer();
+  if (!t.enabled) { box.hidden = true; return; }
+  box.hidden = false; tLeft = tTotal = +t.seconds || 30;
+  drawTimer();
+  tInt = setInterval(() => { tLeft--; drawTimer(); if (tLeft <= 5 && tLeft > 0) beep(880, .06, .08); if (tLeft <= 0) { stopTimer(); answer(-1); } }, 1000);
+}
+let tLeft = 0, tTotal = 1;
+function drawTimer() {
+  const R = 23, C = 2 * Math.PI * R, col = tLeft <= 5 ? 'var(--wrong)' : 'var(--primary)';
+  $('#q-timer').innerHTML = `<svg class="ring" viewBox="0 0 54 54"><circle cx="27" cy="27" r="${R}" stroke="rgba(255,255,255,.15)"/><circle cx="27" cy="27" r="${R}" stroke="${col}" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - tLeft / tTotal)}" transform="rotate(-90 27 27)" stroke-linecap="round"/></svg><b>${tLeft}</b>`;
+}
+function stopTimer() { clearInterval(tInt); tInt = null; }
+
+/* ---------------- result popup ---------------- */
+function showResult(ok, q, timeout, team) {
+  const st = S.settings, cfg = ok ? st.correctPop : st.wrongPop;
+  if (st.sounds && cfg.sound) playSound(ok, cfg.customSound);
+  if (!cfg.enabled) { $('#q-after').hidden = false; return; }
+  const pop = $('#pop'), card = $('#popcard');
+  pop.className = 'pop ' + (ok ? 'ok' : 'bad');
+  const ansText = q.choices[q.correct];
+  card.innerHTML =
+    `<div class="medal"><svg viewBox="0 0 100 100" aria-hidden="true">${STAR8}</svg>` +
+    (cfg.image ? `<img class="pimg" src="${cfg.image}" alt="">` : `<div class="emo">${esc(cfg.emoji || (ok ? '🌟' : '😔'))}</div>`) + '</div>' +
+    `<h2>${esc(timeout ? 'انتهى الوقت!' : cfg.title)}</h2>` +
+    (cfg.message ? `<p>${esc(cfg.message)}</p>` : '') +
+    (team ? `<span class="tn" style="--tc:${team.color}"><i></i>${esc(team.name)}${ok ? ` · +${q.points}` : ''}</span>` : (ok && st.showPoints ? `<span class="pts">+${q.points} ${q.points == 1 ? 'نقطة' : 'نقاط'}</span>` : '')) +
+    (!ok && cfg.showAnswer ? `<div class="ans">الإجابة الصحيحة: <b>${esc(ansText)}</b></div>` : '') +
+    (q.explain ? `<div class="exp">💡 ${esc(q.explain)}</div>` : '') +
+    `<button class="big" id="pop-ok">${ok ? 'متابعة' : 'حسناً'}</button>`;
+  if (!ok && !cfg.shake) card.style.animation = 'popin .4s ease-out'; else card.style.animation = '';
+  pop.hidden = false;
+  $('#pop-ok').focus();
+  $('#pop-ok').onclick = closePop;
+  if (ok && cfg.confetti) fx('confetti'); else if (!ok && cfg.rain) fx('rain');
+}
+function closePop() { $('#pop').hidden = true; stopFx(); continueAfter(); }
+$('#pop').addEventListener('click', e => { if (e.target.id === 'pop') closePop(); });
+
+/* effects canvas */
+const cv = $('#fx'), cx = cv.getContext('2d'); let parts = [], raf = null, fxMode = '', fxUntil = 0;
+function fit() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
+addEventListener('resize', fit); fit();
+function fx(mode) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  fxMode = mode; parts = []; fxUntil = performance.now() + (mode === 'confetti' ? 3500 : 4000);
+  const W = cv.width, H = cv.height, d = devicePixelRatio;
+  const cols = [S.settings.colors.primary, S.settings.colors.primary, '#fff3c4', '#ffffff', S.settings.colors.correct, S.settings.colors.accent];
+  if (mode === 'confetti') for (let i = 0; i < 220; i++) {
+    const side = i % 2; parts.push({ x: side ? W * .15 : W * .85, y: H * .75, vx: (side ? 1 : -1) * (4 + Math.random() * 9) * d, vy: -(10 + Math.random() * 14) * d, r: Math.random() * 6.3, vr: (Math.random() - .5) * .3, w: (6 + Math.random() * 8) * d, h: (4 + Math.random() * 6) * d, c: cols[i % cols.length], star: i % 3 === 0 });
+  }
+  cancelAnimationFrame(raf); loop();
+}
+function spawnRain() { const d = devicePixelRatio; for (let i = 0; i < 4; i++) parts.push({ x: Math.random() * cv.width, y: -20, vy: (9 + Math.random() * 6) * d, l: (14 + Math.random() * 14) * d }); }
+function loop() {
+  cx.clearRect(0, 0, cv.width, cv.height); const now = performance.now(), d = devicePixelRatio;
+  if (fxMode === 'confetti') {
+    parts.forEach(p => { p.vy += .35 * d; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; if (p.star) { const k = p.w * .8; cx.fillRect(-k / 2, -k / 2, k, k); cx.rotate(Math.PI / 4); cx.fillRect(-k / 2, -k / 2, k, k); } else cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2))); cx.restore(); });
+  } else if (fxMode === 'rain') {
+    if (now < fxUntil) spawnRain();
+    cx.strokeStyle = 'rgba(150,190,255,.7)'; cx.lineWidth = 2 * d; cx.lineCap = 'round';
+    parts.forEach(p => { p.y += p.vy; cx.beginPath(); cx.moveTo(p.x, p.y); cx.lineTo(p.x - 2 * d, p.y + p.l); cx.stroke(); });
+    parts = parts.filter(p => p.y < cv.height + 40);
+  }
+  if (now < fxUntil + 2500 && parts.length) raf = requestAnimationFrame(loop); else stopFx();
+}
+function stopFx() { cancelAnimationFrame(raf); parts = []; cx.clearRect(0, 0, cv.width, cv.height); }
+
+/* sounds (generated, no files needed) */
+let AC = null;
+function ac() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } return AC; }
+function beep(f, dur, vol = .15, type = 'sine', when = 0, slideTo) {
+  const a = ac(); if (!a) return; const t = a.currentTime + when;
+  const o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+  if (slideTo) o.frequency.linearRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .05);
+}
+function playSound(ok, custom) {
+  if (custom) { try { const au = new Audio(custom); au.play().catch(() => {}); return; } catch (e) {} }
+  if (ok) [523, 659, 784, 1047].forEach((f, i) => beep(f, .25, .18, 'triangle', i * .11));
+  else { beep(392, .35, .16, 'sawtooth', 0, 370); beep(370, .35, .16, 'sawtooth', .38, 349); beep(349, .8, .16, 'sawtooth', .76, 300); }
+}
+
+/* ---------------- navigation ---------------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'settings') return openSettingsGuarded();
+  if (a === 'home') return renderHome();
+  if (a === 'cats') return renderCats();
+  if (a === 'cat') return renderCat();
+  if (a === 'next') return continueAfter();
+  if (a === 'board') return renderBoard();
+  if (a === 'end') return renderEnd();
+  if (a === 'resume') return resume();
+  if (a === 'newround') return newRound();
+  if (a === 'fs') return toggleFs();
+});
+$('#h-start').onclick = () => { ac(); if (teamsOn() && !P.started && !Object.keys(P.answers).length) renderTeamsSetup(); else renderCats(); };
+document.addEventListener('keydown', e => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
+  if (!$('#gift').hidden && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); return $('#gift').classList.contains('open') ? closeGift() : openGift(); }
+  if (e.key === 'Escape') {
+    if (!$('#dialog').hidden) return closeDialog();
+    if (!$('#settings').hidden) return closeSettings();
+    if (!$('#pop').hidden) return closePop();
+    if (!$('#gift').hidden) return closeGift();
+    if (typing) return;
+    if (document.fullscreenElement) return;
+    return ({ q: renderCat, cat: renderCats, cats: renderHome, teams: renderHome, board: resume, end: renderHome })[cur.screen]?.();
+  }
+  if (typing || !$('#settings').hidden || !$('#dialog').hidden) return;
+  if (e.code === 'KeyF') return toggleFs();
+  if (e.code === 'KeyT' && teamsOn()) return cur.screen === 'board' ? resume() : renderBoard();
+  if (cur.screen === 'q' && !answered && $('#settings').hidden && /^[1-6]$/.test(e.key)) {
+    const btn = document.querySelectorAll('#q-choices .choice')[+e.key - 1]; if (btn) btn.click();
+  }
+});
+function refresh() {
+  if (cur.screen === 'home') renderHome();
+  else if (cur.screen === 'cats') renderCats();
+  else if (cur.screen === 'cat') renderCat();
+  else if (cur.screen === 'q' && !answered) openQuestion(cur.qId);
+  else if (cur.screen === 'teams') renderTeamsSetup();
+  else if (cur.screen === 'board') renderBoard();
+  else if (cur.screen === 'end') renderEnd();
+  else renderStrips();
+}
+
+/* ---------------- teams, lifelines, scoreboard, end of round ---------------- */
+const TEAM_COLORS = ['#2f8f83', '#b8453b', '#3b6fb6', '#c99a3e', '#7d55b8', '#d0703a'];
+function teamsOn() { const t = S.settings.teams; return !!(t && t.enabled && t.list.length >= 2); }
+function activeTeam() {
+  const L = S.settings.teams.list; let t = L.find(x => x.id === P.active);
+  if (!t) { t = L[0]; P.active = t.id; }
+  return t;
+}
+function renderStrips(bumpId) {
+  const on = teamsOn();
+  document.querySelectorAll('.iconbtn[data-act=board]').forEach(b => b.hidden = !on);
+  document.querySelectorAll('.tstrip').forEach(box => {
+    box.innerHTML = '';
+    if (!on) return;
+    const act = activeTeam();
+    S.settings.teams.list.forEach(t => {
+      const c = h('button', { class: 'tchip' + (t.id === act.id ? ' on' : '') + (t.id === bumpId ? ' bump' : ''), style: `--tc:${t.color}`, title: 'اضغط لجعل الدور لهذا الفريق' },
+        h('i'), h('span', {}, t.name), h('b', {}, String(P.teamScores[t.id] || 0)));
+      c.onclick = () => { P.active = t.id; saveProgress(); renderStrips(); renderLife(); };
+      box.appendChild(c);
+    });
+  });
+}
+function lifeKey() { return teamsOn() ? activeTeam().id : 'solo'; }
+function lifeLeft() {
+  const k = lifeKey(), L = S.settings.lifelines;
+  if (!P.life[k]) P.life[k] = { fifty: +L.fifty || 0, swap: +L.swap || 0, time: +L.time || 0 };
+  return P.life[k];
+}
+function renderLife() {
+  const box = $('#q-life'), L = S.settings.lifelines;
+  if (!L.enabled || cur.screen !== 'q') { box.hidden = true; return; }
+  const left = lifeLeft(); box.hidden = false; box.innerHTML = '';
+  const items = [['fifty', '½', 'حذف إجابتين'], ['swap', '⟳', 'تغيير السؤال']];
+  if (S.settings.timer.enabled) items.push(['time', '+' + L.extra, 'وقت إضافي']);
+  items.forEach(([k, ico, label]) => {
+    if (!(+L[k] > 0)) return;
+    const b = h('button', { class: 'life', disabled: answered || left[k] <= 0 }, h('span', { class: 'ico' }, ico), label, h('small', {}, `(${left[k]})`));
+    b.onclick = () => useLife(k);
+    box.appendChild(b);
+  });
+  if (!box.children.length) box.hidden = true;
+}
+function useLife(k) {
+  if (answered) return;
+  const left = lifeLeft(), cat = findCat(cur.catId), q = cat.questions.find(x => x.id === cur.qId);
+  if (left[k] <= 0) return;
+  if (k === 'fifty') {
+    const wrong = [...document.querySelectorAll('#q-choices .choice:not(.gone)')].filter(b => +b.dataset.ci !== q.correct);
+    if (wrong.length < 2) return toast('لا يوجد ما يكفي من الاختيارات للحذف');
+    wrong.sort(() => Math.random() - .5).slice(0, wrong.length - 1).forEach(b => { b.classList.add('gone'); b.disabled = true; });
+  } else if (k === 'swap') {
+    const others = cat.questions.filter(x => x.id !== q.id && !P.answers[x.id]);
+    if (!others.length) return toast('لا يوجد سؤال آخر متاح في هذا القسم');
+    left[k]--; saveProgress();
+    beep(660, .12, .12, 'triangle'); beep(880, .15, .12, 'triangle', .1);
+    return openQuestion(others[Math.floor(Math.random() * others.length)].id);
+  } else if (k === 'time') {
+    if (!tInt) return;
+    tLeft += +S.settings.lifelines.extra || 15; tTotal = Math.max(tTotal, tLeft); drawTimer();
+  }
+  left[k]--; saveProgress(); renderLife();
+  beep(660, .12, .12, 'triangle'); beep(880, .15, .12, 'triangle', .1);
+}
+function allAnswered() {
+  const qs = S.categories.flatMap(c => c.questions);
+  return qs.length > 0 && qs.every(q => P.answers[q.id]);
+}
+/* ---------------- gifts ---------------- */
+let pendingGift = null, giftDone = null;
+function giftAvailable(g) { return !(+g.qty > 0) || (P.giftsUsed[g.id] || 0) < +g.qty; }
+function pickGift(q, team) {
+  const G = S.settings.gifts;
+  if (!G || !G.enabled || !G.list.length) return null;
+  if (G.mode === 'marked' && !q.gift) return null;
+  if (G.mode === 'chance' && Math.random() * 100 >= +G.chance) return null;
+  const avail = G.list.filter(giftAvailable); if (!avail.length) return null;
+  const g = G.order === 'ordered' ? avail[0] : avail[Math.floor(Math.random() * avail.length)];
+  P.giftsUsed[g.id] = (P.giftsUsed[g.id] || 0) + 1;
+  P.gifts.push({ gid: g.id, name: g.name, image: g.image, emoji: g.emoji, team: team ? team.name : '', color: team ? team.color : '' });
+  saveProgress();
+  return { g, team };
+}
+function continueAfter() {
+  if (pendingGift) { const x = pendingGift; pendingGift = null; return showGift(x.g, x.team, afterQuestion); }
+  afterQuestion();
+}
+function showGift(g, team, done) {
+  giftDone = done || null;
+  const el = $('#gift'); el.classList.remove('open'); stopFx();
+  $('#g-title').textContent = S.settings.gifts.title || 'مبروك! ربحت هدية';
+  const tm = $('#g-team'); tm.hidden = !team;
+  if (team) { tm.style.setProperty('--tc', team.color); tm.innerHTML = `<i></i>${esc(team.name)}`; }
+  const img = $('#g-img'), emo = $('#g-emo');
+  img.hidden = !g.image; if (g.image) img.src = g.image;
+  emo.hidden = !!g.image; emo.textContent = g.emoji || '🎁';
+  $('#g-name').textContent = g.name || 'هدية';
+  $('#g-desc').textContent = g.desc || ''; $('#g-desc').hidden = !g.desc;
+  el.hidden = false;
+  if (S.settings.sounds) [392, 440, 494].forEach((f, i) => beep(f, .18, .12, 'triangle', i * .12));
+  $('#g-box').focus();
+}
+function openGift() {
+  const el = $('#gift'); if (el.classList.contains('open')) return;
+  el.classList.add('open');
+  if (S.settings.sounds) { [523, 659, 784, 1047, 1319].forEach((f, i) => beep(f, .35, .17, 'triangle', i * .09)); beep(1568, .9, .1, 'sine', .5); }
+  fx('confetti'); setTimeout(() => { if (!el.hidden) fx('confetti'); }, 1400);
+  $('#g-ok').focus();
+}
+function closeGift() {
+  $('#gift').hidden = true; stopFx();
+  const d = giftDone; giftDone = null; if (d) d();
+}
+$('#g-box').onclick = openGift;
+$('#g-ok').onclick = closeGift;
+function afterQuestion() {
+  if (S.settings.autoEnd && allAnswered()) return renderEnd();
+  renderCat();
+}
+function resume() {
+  const b = cur.back || 'cats';
+  if (b === 'q' && !answered) return openQuestion(cur.qId);
+  ({ home: renderHome, cats: renderCats, cat: renderCat, teams: renderTeamsSetup, q: renderCat })[b]();
+}
+function newRound() {
+  P = newProgress(); saveProgress();
+  if (teamsOn()) renderTeamsSetup(); else { P.started = true; renderCats(); }
+}
+function toggleFs() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => toast('ملء الشاشة غير متاح هنا'));
+  } catch (e) { toast('ملء الشاشة غير متاح هنا'); }
+}
+function renderTeamsSetup() {
+  show('teams'); setBg(S.settings.appBg);
+  const T = S.settings.teams, box = $('#t-list'); box.innerHTML = '';
+  T.list.forEach((t, i) => {
+    const name = h('input', { type: 'text', id: 'tname-' + t.id, value: t.name, 'aria-label': 'اسم الفريق ' + (i + 1) });
+    name.oninput = () => { t.name = name.value; save(); };
+    const col = h('input', { type: 'color', value: t.color, 'aria-label': 'لون الفريق' });
+    col.oninput = () => { t.color = col.value; card.style.setProperty('--tc', t.color); save(); };
+    const x = h('button', { class: 'x', 'aria-label': 'حذف الفريق', hidden: T.list.length <= 2, onclick: () => { T.list.splice(i, 1); save(); renderTeamsSetup(); } }, '✕');
+    const card = h('div', { class: 'tcard', style: `--tc:${t.color}` }, h('span', { class: 'tn' }, String(i + 1)), name, col, x);
+    box.appendChild(card);
+  });
+  if (T.list.length < 6) box.appendChild(h('button', { class: 'tadd', onclick: () => {
+    const used = T.list.map(t => t.color), color = TEAM_COLORS.find(c => !used.includes(c)) || TEAM_COLORS[0];
+    const names = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'];
+    T.list.push({ id: uid(), name: 'الفريق ' + names[T.list.length], color }); save(); renderTeamsSetup();
+    const ins = document.querySelectorAll('.tcard input[type=text]'); ins[ins.length - 1]?.select();
+  } }, '+ إضافة فريق'));
+}
+$('#t-go').onclick = () => {
+  const T = S.settings.teams; T.list.forEach((t, i) => { if (!t.name.trim()) t.name = 'الفريق ' + (i + 1); });
+  T.enabled = true; save();
+  P = newProgress(); P.started = true; P.active = T.list[0].id; saveProgress(); renderCats();
+};
+$('#t-solo').onclick = () => { S.settings.teams.enabled = false; save(); P = newProgress(); P.started = true; saveProgress(); renderCats(); };
+function ranked() {
+  return S.settings.teams.list.map(t => ({ ...t, score: P.teamScores[t.id] || 0 })).sort((a, b) => b.score - a.score);
+}
+function renderBoard() {
+  if (!teamsOn()) return renderEnd();
+  show('board'); setBg(S.settings.appBg);
+  const list = ranked(), max = Math.max(1, ...list.map(t => t.score)), box = $('#b-list'); box.innerHTML = '';
+  let rank = 0, last = null;
+  list.forEach((t, i) => {
+    if (t.score !== last) { rank = i + 1; last = t.score; }
+    const bar = h('i');
+    const sc = h('span', { class: 'sc' }, '0');
+    box.appendChild(h('div', { class: 'brow' + (rank === 1 && t.score > 0 ? ' first' : ''), style: `--tc:${t.color};animation-delay:${i * .08}s` },
+      h('span', { class: 'rk' }, String(rank)), h('div', { class: 'nm' }, h('b', {}, t.name), h('div', { class: 'bar2' }, bar)), sc));
+    requestAnimationFrame(() => requestAnimationFrame(() => bar.style.width = (t.score / max * 100) + '%'));
+    countUp(sc, t.score);
+  });
+}
+function countUp(el, to) {
+  const t0 = performance.now(), d = 900;
+  const step = now => { const k = Math.min(1, (now - t0) / d); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function renderEnd() {
+  show('end'); setBg(S.settings.appBg);
+  const body = $('#e-body'); body.innerHTML = '';
+  if (teamsOn()) {
+    const list = ranked(), top = list[0].score, winners = list.filter(t => t.score === top);
+    $('#e-title').textContent = top === 0 ? 'لا يوجد فائز بعد' : winners.length > 1 ? 'تعادل بين ' + winners.map(t => t.name).join(' و ') : 'الفائز: ' + winners[0].name;
+    const pod = h('div', { class: 'podium' });
+    [[1, 'p2'], [0, 'p1'], [2, 'p3']].forEach(([i, cls]) => {
+      const t = list[i]; if (!t) return;
+      const place = list.findIndex(x => x.score === t.score) + 1;
+      pod.appendChild(h('div', { class: 'pod ' + cls, style: `--tc:${t.color}` },
+        place === 1 && top > 0 ? h('span', { class: 'crown' }, '👑') : null,
+        h('span', { class: 'who' }, t.name), h('span', { class: 'pts' }, t.score + ' نقطة'),
+        h('div', { class: 'blk' }, String(place))));
+    });
+    body.appendChild(pod);
+    if (list.length > 3) body.appendChild(h('div', { class: 'endrest' }, list.slice(3).map((t, i) => h('span', { class: 'tchip', style: `--tc:${t.color}` }, h('i'), `${i + 4}. ${t.name}`, h('b', {}, String(t.score))))));
+  } else {
+    const qs = S.categories.flatMap(c => c.questions), right = qs.filter(q => P.answers[q.id] === 'right').length;
+    $('#e-title').textContent = 'نتيجتك النهائية';
+    const n = h('div', { class: 'solo-score' }, '0'); countUp(n, P.score);
+    body.append(n, h('p', { class: 'sub' }, `أجبت إجابة صحيحة على ${right} من ${qs.length} سؤال`));
+  }
+  if (P.gifts && P.gifts.length) {
+    body.append(h('p', { class: 'sub', style: 'margin-top:6px' }, '🎁 الهدايا في هذه الجولة'),
+      h('div', { class: 'giftlist' }, P.gifts.map(x => h('span', { class: 'gchip' }, x.image ? h('img', { src: x.image, alt: '' }) : h('span', {}, x.emoji || '🎁'), x.name, x.team ? h('small', {}, '· ' + x.team) : null))));
+  }
+  if (S.settings.sounds) [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => beep(f, .3, .16, 'triangle', i * .14));
+  fx('confetti'); setTimeout(() => { if (cur.screen === 'end') fx('confetti'); }, 1600);
+}
+
+/* ---------------- helpers ---------------- */
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+function pickFile(accept) {
+  return new Promise(res => { const f = $('#filepick'); f.value = ''; f.accept = accept; f.onchange = () => res(f.files[0] || null); f.click(); });
+}
+function readDataURL(file) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); }); }
+async function readImage(file, max = 1600) {
+  if (/gif|svg/.test(file.type)) return readDataURL(file);
+  const src = await readDataURL(file);
+  return new Promise((res, rej) => {
+    const img = new Image(); img.onerror = rej;
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      res(file.type === 'image/png' || file.type === 'image/webp' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', .88));
+    };
+    img.src = src;
+  });
+}
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const k in attrs) { if (k.startsWith('on')) el[k] = attrs[k]; else if (k === 'html') el.innerHTML = attrs[k]; else if (attrs[k] !== false && attrs[k] != null) el.setAttribute(k, attrs[k] === true ? '' : attrs[k]); }
+  kids.flat().forEach(c => c != null && el.append(c.nodeType ? c : document.createTextNode(c)));
+  return el;
+}
+
+/* ---------------- dialogs ---------------- */
+function dialog(build) { const d = $('#dialog'); d.innerHTML = ''; const box = h('div', { class: 'dlg' }); build(box); d.appendChild(box); d.hidden = false; const f = box.querySelector('input,button'); if (f) f.focus(); }
+function closeDialog() { $('#dialog').hidden = true; }
+function confirmBox(msg, yesText, onYes) {
+  dialog(box => box.append(h('b', {}, msg), h('div', { class: 'toolbar' },
+    h('button', { class: 'btn pri', onclick: () => { closeDialog(); onYes(); } }, yesText),
+    h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء'))));
+}
+function openSettingsGuarded() {
+  if (!S.settings.pin) return openSettings();
+  dialog(box => {
+    const inp = h('input', { type: 'password', id: 'pin-in', inputmode: 'numeric', placeholder: 'الرمز السري' });
+    const err = h('span', { class: 'hint', style: 'color:#c0262d' });
+    const go = () => { if (inp.value === S.settings.pin) { closeDialog(); openSettings(); } else { err.textContent = 'الرمز غير صحيح'; inp.select(); } };
+    inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+    box.append(h('b', {}, 'أدخل الرمز السري لفتح الإعدادات'), inp, err, h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'فتح'), h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء')));
+  });
+}
+
+/* ---------------- settings panel ---------------- */
+const TABS = [['general', 'الواجهة الرئيسية'], ['look', 'الخطوط والألوان'], ['content', 'الأقسام والأسئلة'], ['db', 'قاعدة البيانات'], ['popups', 'نوافذ النتيجة'], ['gifts', 'الهدايا'], ['play', 'طريقة اللعب'], ['devices', 'النشر للأجهزة'], ['backup', 'الحفظ والنسخ']];
+let tab = 'general', editCat = null;
+function openSettings(t) {
+  if (t) tab = t;
+  const m = $('#settings'); m.innerHTML = '';
+  const tabs = h('nav', { class: 'tabs' }, TABS.map(([k, n]) => h('button', { class: k === tab ? 'on' : '', onclick: () => { tab = k; openSettings(); } }, n)));
+  const body = h('div', { class: 'pbody', id: 'pbody' });
+  const panel = h('div', { class: 'panel', role: 'dialog', 'aria-label': 'الإعدادات' },
+    h('header', {}, h('h3', {}, 'الإعدادات'), h('span', { class: 'saved', id: 'saved' }, Cloud.on ? (Cloud.canWrite ? 'محفوظ في قاعدة البيانات' : 'قاعدة البيانات للقراءة فقط') : 'محفوظ في هذا المتصفح'), h('button', { class: 'btn close', onclick: closeSettings }, 'إغلاق ✕')),
+    tabs, body);
+  m.appendChild(panel); m.hidden = false;
+  ({ general: tGeneral, look: tLook, content: tContent, db: tDb, popups: tPopups, gifts: tGifts, play: tPlay, devices: tDevices, backup: tBackup })[tab](body);
+}
+function closeSettings() { $('#settings').hidden = true; refresh(); }
+$('#settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
+
+function changed(redraw) { save(); applyTheme(); if (redraw) openSettings(); }
+const F = (label, ctrl, opts = {}) => h('div', { class: 'f' + (opts.wide ? ' wide' : '') }, h('span', { class: 'lb' }, label), ctrl, opts.hint ? h('span', { class: 'hint' }, opts.hint) : null);
+function text(obj, key, label, opts = {}) {
+  const el = h(opts.area ? 'textarea' : 'input', { type: 'text', id: 'f-' + key + '-' + (opts.idx ?? ''), value: obj[key] ?? '', placeholder: opts.ph || '' });
+  if (opts.area) el.value = obj[key] ?? '';
+  el.oninput = () => { obj[key] = el.value; changed(); if (opts.after) opts.after(); };
+  return F(label, el, opts);
+}
+function num(obj, key, label, opts = {}) {
+  const el = h('input', { type: 'number', value: obj[key], min: opts.min ?? 0, max: opts.max ?? 999, step: opts.step ?? 1 });
+  el.oninput = () => { obj[key] = +el.value; changed(); };
+  return F(label, el, opts);
+}
+function color(obj, key, label) {
+  const code = h('code', {}, obj[key]);
+  const el = h('input', { type: 'color', value: obj[key] });
+  el.oninput = () => { obj[key] = el.value; code.textContent = el.value; changed(); };
+  return F(label, h('div', { class: 'colorrow' }, el, code));
+}
+function range(obj, key, label, min, max, step, fmt = v => v) {
+  const out = h('span', { class: 'hint' }, fmt(obj[key]));
+  const el = h('input', { type: 'range', min, max, step, value: obj[key] });
+  el.oninput = () => { obj[key] = +el.value; out.textContent = fmt(el.value); changed(); };
+  return F(label, h('div', {}, el, out));
+}
+function check(obj, key, label, opts = {}) {
+  const el = h('input', { type: 'checkbox' }); el.checked = !!obj[key];
+  el.onchange = () => { obj[key] = el.checked; changed(opts.redraw); };
+  return h('div', { class: 'f' + (opts.wide ? ' wide' : '') }, h('label', { class: 'sw' }, el, label), opts.hint ? h('span', { class: 'hint' }, opts.hint) : null);
+}
+function select(obj, key, label, options, opts = {}) {
+  const el = h('select', {}, options.map(([v, n]) => h('option', { value: v }, n))); el.value = obj[key];
+  el.onchange = () => { obj[key] = el.value; changed(opts.redraw); };
+  return F(label, el, opts);
+}
+function image(obj, key, label, opts = {}) {
+  const pv = h('span', { class: 'pv' }); const setPv = () => pv.style.backgroundImage = obj[key] ? `url(${obj[key]})` : '';
+  setPv();
+  const rm = h('button', { class: 'btn sm danger', onclick: () => { obj[key] = ''; setPv(); rm.hidden = true; changed(); } }, 'إزالة'); rm.hidden = !obj[key];
+  const pick = h('button', { class: 'btn sm', onclick: async () => {
+    const f = await pickFile('image/*'); if (!f) return;
+    pick.disabled = true; pick.textContent = 'جارٍ الرفع…';
+    try { obj[key] = await storeImage(f, opts.max || 1600); setPv(); rm.hidden = false; changed(); } catch (e) { toast('تعذر قراءة الصورة'); }
+    pick.disabled = false; pick.textContent = 'اختر صورة';
+  } }, 'اختر صورة');
+  return F(label, h('div', { class: 'imgpick' }, pv, pick, rm), opts);
+}
+function audio(obj, key, label) {
+  const st = h('span', { class: 'hint' }, obj[key] ? 'صوت مخصص مضاف' : 'الصوت الافتراضي');
+  const rm = h('button', { class: 'btn sm danger', onclick: () => { obj[key] = ''; st.textContent = 'الصوت الافتراضي'; changed(); } }, 'إزالة');
+  const pick = h('button', { class: 'btn sm', onclick: async () => {
+    const f = await pickFile('audio/*'); if (!f) return;
+    if (f.size > 3e6) return toast('الملف كبير، اختر صوتاً أقل من 3 ميغابايت');
+    obj[key] = await readDataURL(f); st.textContent = 'صوت مخصص: ' + f.name; changed();
+  } }, 'رفع صوت');
+  return F(label, h('div', { class: 'imgpick' }, pick, rm, st));
+}
+
+function tGeneral(b) {
+  const s = S.settings;
+  b.append(
+    h('h4', {}, 'النصوص'),
+    h('div', { class: 'fields' }, text(s, 'bism', 'النص العلوي (مثل البسملة)', { ph: 'اتركه فارغاً لإخفائه' }), text(s, 'title', 'عنوان البرنامج'), text(s, 'subtitle', 'العنوان الفرعي'), text(s, 'startText', 'نص زر البدء'), text(s, 'catsTitle', 'عنوان صفحة الأقسام')),
+    h('h4', {}, 'الشعار'),
+    h('div', { class: 'fields' }, image(s, 'logo', 'شعار البرنامج', { hint: 'يفضل صورة PNG بخلفية شفافة', max: 900 }), range(s, 'logoSize', 'حجم الشعار في الواجهة الرئيسية', 80, 600, 10, v => v + ' بكسل'), check(s, 'logoFrame', 'وضع الشعار داخل إطار القوس', { hint: 'عند الإيقاف يظهر الشعار وحده بدون إطار' })),
+    h('h4', {}, 'الخلفيات'),
+    h('div', { class: 'fields' },
+      image(s, 'homeBg', 'خلفية الواجهة الرئيسية', { max: 2200 }),
+      image(s, 'appBg', 'خلفية الأقسام والأسئلة', { max: 2200, hint: 'تظهر خلف شاشات الأقسام والأرقام والأسئلة' }),
+      range(s, 'overlay', 'تعتيم فوق صورة الخلفية', 0, .9, .05, v => Math.round(v * 100) + '%')),
+    h('h4', {}, 'الزخرفة الإسلامية'),
+    h('div', { class: 'fields' }, check(s, 'pattern', 'إظهار الزخرفة الهندسية في الخلفية'), range(s, 'patternOpacity', 'وضوح الزخرفة', .03, .35, .01, v => Math.round(v * 100) + '%')),
+    h('div', { class: 'toolbar', style: 'margin-top:18px' }, h('button', { class: 'btn pri', onclick: () => { closeSettings(); renderHome(); } }, 'معاينة الواجهة الرئيسية'))
+  );
+}
+const FONTS = ['El Messiri', 'Tajawal', 'Cairo', 'Almarai', 'Aref Ruqaa', 'Amiri', 'Reem Kufi', 'Marhey', 'Changa', 'Lalezar', 'Noto Kufi Arabic', 'Readex Pro'];
+function tLook(b) {
+  const s = S.settings, c = s.colors;
+  const fontOpts = FONTS.map(f => [f, f]).concat(s.customFont ? [['custom', 'خطي المرفوع']] : []);
+  const prev = h('div', { class: 'preview-font', style: `font-family:${s.headFont === 'custom' ? 'CustomFont' : "'" + s.headFont + "'"}` }, 'معاينة: ما هي عاصمة المملكة؟ ');
+  prev.append(h('span', { style: `font-family:${s.font === 'custom' ? 'CustomFont' : "'" + s.font + "'"};font-size:.75em` }, 'نص الاختيارات والأزرار 123'));
+  b.append(
+    h('h4', {}, 'الخطوط'),
+    h('div', { class: 'fields' },
+      select(s, 'headFont', 'خط العناوين والأسئلة', fontOpts, { redraw: true }),
+      select(s, 'font', 'خط النصوص والاختيارات', fontOpts, { redraw: true }),
+      select(s, 'bismFont', 'خط النص العلوي (البسملة)', fontOpts, { redraw: true }),
+      range(s, 'scale', 'حجم الخط العام', .8, 1.6, .05, v => Math.round(v * 100) + '%'),
+      F('رفع خط خاص (TTF / OTF / WOFF)', h('div', { class: 'imgpick' },
+        h('button', { class: 'btn sm', onclick: async () => {
+          const f = await pickFile('.ttf,.otf,.woff,.woff2'); if (!f) return;
+          if (f.size > 4e6) return toast('ملف الخط كبير جداً');
+          const fd = await readDataURL(f);
+          try { s.customFont = (Cloud.on && Cloud.assets) ? await uploadDataUrl(fd, true) : fd; } catch (e) { s.customFont = fd; }
+          s.font = s.headFont = 'custom'; await applyTheme(); changed(true); toast('تم إضافة الخط');
+        } }, 'اختر ملف خط'),
+        s.customFont ? h('button', { class: 'btn sm danger', onclick: () => { s.customFont = ''; if (s.font === 'custom') s.font = 'Cairo'; if (s.headFont === 'custom') s.headFont = 'Cairo'; changed(true); } }, 'حذف الخط') : null)),
+      h('div', { class: 'f wide' }, prev)),
+    h('h4', {}, 'الألوان'),
+    h('div', { class: 'fields' },
+      color(c, 'bg', 'لون الخلفية'), color(c, 'bg2', 'لون التدرج العلوي'), color(c, 'primary', 'اللون الرئيسي (العناوين والأزرار)'),
+      color(c, 'accent', 'لون ثانوي'), color(c, 'text', 'لون النص'), color(c, 'muted', 'لون النص الخافت'),
+      color(c, 'cardText', 'لون نص بطاقات الأقسام'), color(c, 'correct', 'لون الإجابة الصحيحة'), color(c, 'wrong', 'لون الإجابة الخاطئة')),
+    h('h4', {}, 'الشكل'),
+    h('div', { class: 'fields' }, range(s, 'radius', 'استدارة الزوايا', 0, 40, 1, v => v + ' بكسل')),
+    h('div', { class: 'toolbar', style: 'margin-top:18px' }, h('span', { class: 'hint' }, 'قوالب جاهزة:'),
+      ...THEMES
+        .map(([n, p]) => h('button', { class: 'btn sm', onclick: () => { Object.assign(c, p); changed(true); } }, n)))
+  );
+}
+function tContent(b) {
+  if (!findCat(editCat)) editCat = S.categories[0]?.id || null;
+  const list = h('div', { class: 'catlist' }, S.categories.map(cat => h('button', { class: cat.id === editCat ? 'on' : '', onclick: () => { editCat = cat.id; openSettings(); } }, (cat.icon || '') + ' ' + cat.name + ` (${cat.questions.length})`)),
+    h('button', { onclick: () => { const c = { id: uid(), name: 'قسم جديد', icon: '⭐', color: '#6366f1', image: '', questions: [] }; S.categories.push(c); editCat = c.id; changed(true); } }, '+ قسم جديد'));
+  b.append(
+    h('div', { class: 'note', style: 'margin-bottom:14px' }, 'لإضافة أسئلة كثيرة مرة واحدة: نزّل القالب، اكتب الأسئلة في Excel، ثم استورده. كل صف سؤال، والقسم يُنشأ تلقائياً إذا لم يكن موجوداً.'),
+    h('div', { class: 'toolbar', style: 'margin-bottom:18px' },
+      h('button', { class: 'btn pri', onclick: excelImport }, 'استيراد أسئلة من Excel'),
+      h('button', { class: 'btn', onclick: () => excelExport(false) }, 'تنزيل قالب Excel'),
+      h('button', { class: 'btn', onclick: () => excelExport(true) }, 'تصدير كل الأسئلة إلى Excel')),
+    h('h4', {}, 'الأقسام'), list);
+  const cat = findCat(editCat);
+  if (!cat) { b.append(h('p', { class: 'note' }, 'لا توجد أقسام. اضغط «قسم جديد» للبدء.')); return; }
+  const idx = S.categories.indexOf(cat);
+  b.append(
+    h('div', { class: 'fields' },
+      text(cat, 'name', 'اسم القسم'), text(cat, 'icon', 'أيقونة (إيموجي)', { ph: '🌍' }), color(cat, 'color', 'لون البطاقة'),
+      image(cat, 'image', 'صورة البطاقة', { max: 1000, hint: 'تغطي البطاقة بالكامل' })),
+    h('div', { class: 'toolbar', style: 'margin-top:12px' },
+      h('button', { class: 'btn sm', disabled: idx === 0, onclick: () => { S.categories.splice(idx, 1); S.categories.splice(idx - 1, 0, cat); changed(true); } }, '→ تقديم'),
+      h('button', { class: 'btn sm', disabled: idx === S.categories.length - 1, onclick: () => { S.categories.splice(idx, 1); S.categories.splice(idx + 1, 0, cat); changed(true); } }, 'تأخير ←'),
+      h('button', { class: 'btn sm danger', onclick: () => confirmBox(`حذف قسم «${cat.name}» وكل أسئلته؟`, 'حذف', () => { S.categories.splice(idx, 1); editCat = null; changed(true); }) }, 'حذف القسم')),
+    h('h4', {}, `أسئلة قسم «${cat.name}» — كل سؤال يظهر كرقم`)
+  );
+  cat.questions.forEach((q, qi) => b.append(questionEditor(cat, q, qi)));
+  b.append(h('div', { class: 'toolbar', style: 'margin-top:14px' }, h('button', { class: 'btn pri', onclick: () => {
+    cat.questions.push(Q('', ['', '', '', ''], 0)); changed(true);
+    const all = document.querySelectorAll('.qitem'); const last = all[all.length - 1]; if (last) { last.open = true; last.scrollIntoView({ block: 'center' }); last.querySelector('textarea')?.focus(); }
+  } }, '+ إضافة سؤال')));
+}
+let openQ = new Set();
+function questionEditor(cat, q, qi) {
+  const summaryTx = h('span', { class: 'tx' }, q.text || 'سؤال بدون نص');
+  const d = h('details', { class: 'qitem' }, h('summary', {}, h('span', { class: 'n' }, qi + 1), summaryTx, h('span', { class: 'hint' }, `${q.points} ن`)));
+  d.open = openQ.has(q.id); d.ontoggle = () => d.open ? openQ.add(q.id) : openQ.delete(q.id);
+  const body = h('div', { class: 'qb' });
+  body.append(text(q, 'text', 'نص السؤال', { area: true, wide: true, idx: q.id, after: () => summaryTx.textContent = q.text || 'سؤال بدون نص' }));
+  const chBox = h('div', { class: 'f' }, h('span', { class: 'lb' }, 'الاختيارات (حدد الإجابة الصحيحة بالدائرة)'));
+  q.choices.forEach((ch, ci) => {
+    const r = h('input', { type: 'radio', name: 'c-' + q.id, 'aria-label': 'الإجابة الصحيحة' }); r.checked = q.correct === ci;
+    r.onchange = () => { q.correct = ci; changed(); };
+    const inp = h('input', { type: 'text', value: ch, placeholder: 'الاختيار ' + (LETTERS[ci] || ci + 1) });
+    inp.oninput = () => { q.choices[ci] = inp.value; changed(); };
+    const del = h('button', { class: 'btn sm danger', disabled: q.choices.length <= 2, 'aria-label': 'حذف الاختيار', onclick: () => { q.choices.splice(ci, 1); if (q.correct >= q.choices.length || q.correct === ci) q.correct = 0; else if (q.correct > ci) q.correct--; openQ.add(q.id); changed(true); } }, '✕');
+    chBox.append(h('div', { class: 'chrow' }, r, h('b', {}, LETTERS[ci] || ci + 1), inp, del));
+  });
+  if (q.choices.length < 6) chBox.append(h('div', {}, h('button', { class: 'btn sm', onclick: () => { q.choices.push(''); openQ.add(q.id); changed(true); } }, '+ اختيار')));
+  body.append(chBox,
+    text(q, 'explain', 'شرح أو معلومة تظهر بعد الإجابة (اختياري)', { area: true, wide: true, idx: 'x' + q.id }),
+    check(q, 'gift', 'عليه هدية 🎁 (يُستخدم عند اختيار «الأسئلة المحددة» في تبويب الهدايا)'),
+    h('div', { class: 'fields' }, num(q, 'points', 'النقاط', { min: 0, max: 100 }), image(q, 'image', 'صورة مع السؤال (اختياري)')),
+    h('div', { class: 'toolbar' },
+      h('button', { class: 'btn sm', disabled: qi === 0, onclick: () => { cat.questions.splice(qi, 1); cat.questions.splice(qi - 1, 0, q); changed(true); } }, '↑ أعلى'),
+      h('button', { class: 'btn sm', disabled: qi === cat.questions.length - 1, onclick: () => { cat.questions.splice(qi, 1); cat.questions.splice(qi + 1, 0, q); changed(true); } }, '↓ أسفل'),
+      h('button', { class: 'btn sm', onclick: () => { const c = JSON.parse(JSON.stringify(q)); c.id = uid(); cat.questions.splice(qi + 1, 0, c); changed(true); } }, 'نسخ'),
+      h('button', { class: 'btn sm', onclick: () => { delete P.answers[q.id]; saveProgress(); toast('تمت إعادة السؤال للعب'); } }, 'إعادة فتح السؤال'),
+      h('button', { class: 'btn sm danger', onclick: () => confirmBox('حذف هذا السؤال؟', 'حذف', () => { cat.questions.splice(qi, 1); changed(true); }) }, 'حذف السؤال')));
+  d.append(body);
+  return d;
+}
+function tPopups(b) {
+  const s = S.settings, c = s.correctPop, w = s.wrongPop;
+  b.append(
+    h('h4', {}, '🎉 نافذة الإجابة الصحيحة (الاحتفال)'),
+    h('div', { class: 'fields' },
+      check(c, 'enabled', 'تفعيل نافذة الاحتفال', { wide: true, hint: 'عند الإيقاف يتلون الاختيار بالأخضر فقط' }),
+      text(c, 'title', 'العنوان'), text(c, 'message', 'الرسالة'), text(c, 'emoji', 'الإيموجي', { ph: '🎉' }),
+      image(c, 'image', 'صورة بدل الإيموجي (تقبل GIF متحرك)', { max: 700 }),
+      check(c, 'confetti', 'قصاصات ملونة متطايرة'), check(c, 'sound', 'صوت الاحتفال'), audio(c, 'customSound', 'صوت مخصص للاحتفال')),
+    h('div', { class: 'toolbar', style: 'margin-top:12px' }, h('button', { class: 'btn', onclick: () => testPop(true) }, 'تجربة نافذة الاحتفال')),
+    h('h4', {}, '😢 نافذة الإجابة الخاطئة'),
+    h('div', { class: 'fields' },
+      check(w, 'enabled', 'تفعيل نافذة الإجابة الخاطئة', { wide: true, hint: 'عند الإيقاف يتلون الاختيار بالأحمر فقط' }),
+      text(w, 'title', 'العنوان'), text(w, 'message', 'الرسالة'), text(w, 'emoji', 'الإيموجي', { ph: '😢' }),
+      image(w, 'image', 'صورة بدل الإيموجي (تقبل GIF متحرك)', { max: 700 }),
+      check(w, 'showAnswer', 'إظهار الإجابة الصحيحة'), check(w, 'rain', 'مطر حزين'), check(w, 'shake', 'اهتزاز النافذة'),
+      check(w, 'sound', 'صوت حزين'), audio(w, 'customSound', 'صوت مخصص للخطأ')),
+    h('div', { class: 'toolbar', style: 'margin-top:12px' }, h('button', { class: 'btn', onclick: () => testPop(false) }, 'تجربة نافذة الخطأ'))
+  );
+}
+function tGifts(b) {
+  const G = S.settings.gifts;
+  const given = P.gifts ? P.gifts.length : 0;
+  b.append(
+    h('div', { class: 'fields' },
+      check(G, 'enabled', 'تفعيل الهدايا بعد الإجابة الصحيحة', { wide: true, hint: 'تظهر شاشة هدية كاملة بعد نافذة الاحتفال، والمقدم يضغط على الصندوق لفتحها' }),
+      select(G, 'mode', 'متى تظهر الهدية؟', [['every', 'بعد كل إجابة صحيحة'], ['chance', 'بشكل عشوائي حسب النسبة'], ['marked', 'فقط في الأسئلة المحددة بعلامة هدية']], { redraw: true }),
+      G.mode === 'chance' ? range(G, 'chance', 'نسبة ظهور الهدية', 5, 100, 5, v => v + '%') : null,
+      select(G, 'order', 'اختيار الهدية', [['random', 'عشوائي من الهدايا المتبقية'], ['ordered', 'بالترتيب من أعلى القائمة']]),
+      text(G, 'title', 'عنوان شاشة الهدية'),
+      G.mode === 'marked' ? check(G, 'showMark', 'إظهار 🎁 على رقم السؤال', { hint: 'حدد الأسئلة من «الأقسام والأسئلة» بخيار «عليه هدية»' }) : null),
+    h('h4', {}, `قائمة الهدايا (${G.list.length})`),
+    h('p', { class: 'note' }, `الكمية 0 تعني بلا حد. الهدية التي تنفد كميتها لا تظهر مرة أخرى حتى تبدأ جولة جديدة. وُزعت في الجولة الحالية: ${given} هدية.`)
+  );
+  G.list.forEach((g, gi) => {
+    const pv = h('div', { class: 'gpv' });
+    const setPv = () => { pv.style.backgroundImage = g.image ? `url(${g.image})` : ''; pv.textContent = g.image ? '' : (g.emoji || '🎁'); };
+    setPv();
+    const used = (P.giftsUsed && P.giftsUsed[g.id]) || 0;
+    b.append(h('div', { class: 'gedit' }, pv, h('div', {},
+      h('div', { class: 'fields' },
+        text(g, 'name', 'اسم الهدية', { idx: g.id }),
+        text(g, 'desc', 'وصف قصير (اختياري)', { idx: 'd' + g.id }),
+        image(g, 'image', 'صورة الهدية', { max: 1600, hint: 'تظهر بحجم الشاشة. PNG بخلفية شفافة يعطي أجمل شكل' }),
+        text(g, 'emoji', 'إيموجي بدل الصورة', { idx: 'e' + g.id, ph: '🎁', after: setPv }),
+        num(g, 'qty', 'الكمية المتاحة', { min: 0, max: 999, hint: +g.qty > 0 ? `وُزع منها ${used} · المتبقي ${Math.max(0, g.qty - used)}` : 'بلا حد' })),
+      h('div', { class: 'toolbar', style: 'margin-top:10px' },
+        h('button', { class: 'btn sm pri', onclick: () => { closeSettings(); showGift(g, teamsOn() ? activeTeam() : null, null); } }, 'معاينة على الشاشة'),
+        h('button', { class: 'btn sm', disabled: gi === 0, onclick: () => { G.list.splice(gi, 1); G.list.splice(gi - 1, 0, g); changed(true); } }, '↑ أعلى'),
+        h('button', { class: 'btn sm', disabled: gi === G.list.length - 1, onclick: () => { G.list.splice(gi, 1); G.list.splice(gi + 1, 0, g); changed(true); } }, '↓ أسفل'),
+        h('button', { class: 'btn sm danger', onclick: () => confirmBox(`حذف هدية «${g.name}»؟`, 'حذف', () => { G.list.splice(gi, 1); changed(true); }) }, 'حذف')))));
+  });
+  b.append(h('div', { class: 'toolbar', style: 'margin-top:14px' },
+    h('button', { class: 'btn pri', onclick: () => { G.list.push({ id: uid(), name: 'هدية جديدة', desc: '', emoji: '🎁', image: '', qty: 1 }); changed(true); setTimeout(() => { const e = document.querySelectorAll('.gedit'); e[e.length - 1]?.scrollIntoView({ block: 'center' }); }, 30); } }, '+ إضافة هدية'),
+    given ? h('button', { class: 'btn danger', onclick: () => confirmBox('إرجاع كل الهدايا الموزعة إلى المخزون؟', 'إرجاع', () => { P.gifts = []; P.giftsUsed = {}; saveProgress(); openSettings(); }) }, 'إرجاع الكميات') : null));
+}
+function testPop(ok) {
+  const q = { points: 1, choices: ['مثال للإجابة الصحيحة'], correct: 0 };
+  const st = S.settings, cfg = ok ? st.correctPop : st.wrongPop;
+  if (!cfg.enabled) return toast('النافذة غير مفعلة');
+  showResult(ok, q, false);
+  $('#pop-ok').onclick = () => { $('#pop').hidden = true; stopFx(); };
+}
+function tPlay(b) {
+  const s = S.settings;
+  b.append(
+    h('h4', {}, 'وضع الفرق'),
+    h('div', { class: 'fields' },
+      check(s.teams, 'enabled', 'اللعب بين فرق متنافسة', { redraw: true, hint: 'عند الإيقاف تصبح المسابقة فردية بنقاط واحدة' }),
+      select(s.teams, 'mode', 'من يجيب على السؤال؟', [['turns', 'بالدور: ينتقل الدور تلقائياً بعد كل سؤال'], ['host', 'المقدم يختار الفريق بالضغط على اسمه']])),
+    h('div', { class: 'toolbar', style: 'margin-top:12px' }, h('span', { class: 'hint' }, `الفرق الحالية: ${s.teams.list.map(t => t.name).join('، ')}`),
+      h('button', { class: 'btn sm pri', onclick: () => { closeSettings(); renderTeamsSetup(); } }, 'تعديل أسماء الفرق وألوانها')),
+    h('h4', {}, 'وسائل المساعدة'),
+    h('div', { class: 'fields' },
+      check(s.lifelines, 'enabled', 'تفعيل وسائل المساعدة', { wide: true, hint: 'كل فريق له عدده الخاص، وتظهر فوق الاختيارات' }),
+      num(s.lifelines, 'fifty', 'عدد مرات «حذف إجابتين»', { min: 0, max: 9 }),
+      num(s.lifelines, 'swap', 'عدد مرات «تغيير السؤال»', { min: 0, max: 9 }),
+      num(s.lifelines, 'time', 'عدد مرات «وقت إضافي»', { min: 0, max: 9, hint: 'يظهر فقط عند تفعيل المؤقت' }),
+      num(s.lifelines, 'extra', 'ثواني الوقت الإضافي', { min: 5, max: 120 })),
+    h('h4', {}, 'المؤقت'),
+    h('div', { class: 'fields' }, check(s.timer, 'enabled', 'تفعيل مؤقت لكل سؤال'), num(s.timer, 'seconds', 'عدد الثواني', { min: 5, max: 600 })),
+    h('h4', {}, 'خيارات اللعب'),
+    h('div', { class: 'fields' },
+      check(s, 'showScore', 'إظهار مجموع النقاط'), check(s, 'showPoints', 'إظهار نقاط كل سؤال'),
+      check(s, 'lockAnswered', 'قفل الأرقام بعد الإجابة', { hint: 'عند الإيقاف يمكن فتح السؤال مرة أخرى' }),
+      check(s, 'shuffle', 'خلط ترتيب الاختيارات'), check(s, 'sounds', 'تشغيل الأصوات'),
+      check(s, 'autoEnd', 'إعلان الفائز تلقائياً بعد آخر سؤال')),
+    h('h4', {}, 'اختصارات لوحة المفاتيح (للمقدم)'),
+    h('p', { class: 'note' }, 'الأرقام 1 إلى 6: اختيار الإجابة · Enter أو المسافة: متابعة بعد النتيجة · Esc: رجوع خطوة · F: ملء الشاشة · T: لوحة النتائج'),
+    h('h4', {}, 'حماية الإعدادات'),
+    h('div', { class: 'fields' }, F('رمز سري لفتح الإعدادات', (() => { const i = h('input', { type: 'text', value: s.pin, placeholder: 'اتركه فارغاً بدون رمز' }); i.oninput = () => { s.pin = i.value.trim(); changed(); }; return i; })(), { hint: 'مفيد عند عرض المسابقة أمام المتسابقين' })),
+    h('h4', {}, 'الجولة الحالية'),
+    h('p', { class: 'note' }, (teamsOn() ? ranked().map(t => `${t.name}: ${t.score}`).join(' · ') : `النقاط الحالية: ${P.score}`) + ` · الأسئلة المجاب عليها: ${Object.keys(P.answers).length}`),
+    h('div', { class: 'toolbar' }, h('button', { class: 'btn danger', onclick: () => confirmBox('بدء جولة جديدة؟ ستصفر النقاط وتفتح كل الأرقام.', 'ابدأ من جديد', () => { P = newProgress(); saveProgress(); openSettings(); toast('بدأت جولة جديدة'); }) }, 'جولة جديدة (تصفير النقاط)'))
+  );
+}
+let dbQuery = '', dbCat = '';
+function tDb(b) {
+  const nQ = S.categories.reduce((a, c) => a + c.questions.length, 0);
+  const nImg = mediaFields(S).filter(([o, k, f]) => !f && o[k]).length;
+  const badge = Cloud.on
+    ? (Cloud.status === 'error' ? h('span', { class: 'dbbadge err' }, h('i'), 'متصلة، وآخر حفظ لم ينجح') : h('span', { class: 'dbbadge on' }, h('i'), Cloud.canWrite ? 'قاعدة بيانات سحابية متصلة' : 'قاعدة بيانات سحابية (قراءة فقط)'))
+    : h('span', { class: 'dbbadge off' }, h('i'), 'محفوظة في هذا المتصفح فقط');
+  const usage = h('b', {}, '…');
+  b.append(
+    h('div', { class: 'toolbar', style: 'margin-bottom:14px' }, badge),
+    h('p', { class: 'note', style: 'margin-bottom:14px' }, Cloud.on
+      ? 'الأقسام والأسئلة والاختيارات محفوظة كسجلات في قاعدة بيانات المسابقة، والصور مرفوعة كملفات مرتبطة بها. تفتحها من أي جهاز عبر رابط المسابقة، وكل تعديل يحفظ تلقائياً ويصل للأجهزة المفتوحة. أنت ومن تمنحه صلاحية «محرر» فقط تستطيعون التعديل، والباقي يشاهد ويلعب. الأصوات المخصصة تبقى على هذا الجهاز فقط.'
+      : 'هذه النسخة تعمل من ملف على جهازك، لذلك تُحفظ الأسئلة في هذا المتصفح فقط. لقاعدة بيانات سحابية تفتحها من أي جهاز، استخدم رابط المسابقة على claude.ai. وللنقل بين الأجهزة استخدم «تصدير ملف المسابقة» في تبويب «الحفظ والنسخ».'),
+    h('div', { class: 'dbstat' },
+      h('div', {}, h('b', {}, String(S.categories.length)), h('span', {}, 'قسم')),
+      h('div', {}, h('b', {}, String(nQ)), h('span', {}, 'سؤال')),
+      h('div', {}, h('b', {}, String(nQ ? S.categories.reduce((a, c) => a + c.questions.reduce((x, q) => x + q.choices.length, 0), 0) : 0)), h('span', {}, 'اختيار')),
+      h('div', {}, h('b', {}, String(nImg)), h('span', {}, 'صورة')),
+      Cloud.assets ? h('div', {}, usage, h('span', {}, 'المساحة المستخدمة للصور')) : null));
+  if (Cloud.assets) Cloud.assets.list().then(r => { usage.textContent = (r.usage.bytes / 1048576).toFixed(1) + ' من ' + Math.round(r.usage.maxBytes / 1048576) + ' ميغابايت'; }).catch(() => usage.textContent = '—');
+  if (Cloud.on && Cloud.canWrite) {
+    const localImgs = mediaFields(S).filter(([o, k]) => typeof o[k] === 'string' && o[k].startsWith('data:')).length;
+    b.append(h('div', { class: 'toolbar', style: 'margin-bottom:6px' },
+      h('button', { class: 'btn', onclick: async () => { await cloudSync(); openSettings(); toast(Cloud.status === 'saved' ? 'تمت المزامنة' : 'تعذرت المزامنة'); } }, 'مزامنة الآن'),
+      localImgs && Cloud.assets ? h('button', { class: 'btn pri', onclick: async () => { const r = await migrateMedia(S, (d, t) => toast(`رفع ${d} من ${t}`)); changed(); openSettings(); toast(r.failed ? `تعذر رفع ${r.failed} صورة` : 'تم رفع الصور'); } }, `رفع ${localImgs} صورة محلية`) : null,
+      Cloud.assets ? h('button', { class: 'btn danger', onclick: cleanAssets }, 'حذف الصور غير المستخدمة') : null));
+  }
+  // question browser
+  const qIn = h('input', { type: 'text', id: 'db-q', placeholder: 'ابحث في الأسئلة والاختيارات…', value: dbQuery });
+  const cSel = h('select', { id: 'db-c' }, h('option', { value: '' }, 'كل الأقسام'), S.categories.map(c => h('option', { value: c.id }, c.name)));
+  cSel.value = dbCat;
+  const tbody = h('tbody');
+  const count = h('span', { class: 'hint' });
+  const draw = () => {
+    tbody.innerHTML = '';
+    const term = dbQuery.trim().toLowerCase(); let shown = 0, total = 0;
+    S.categories.forEach(c => {
+      if (dbCat && c.id !== dbCat) return;
+      c.questions.forEach((q, qi) => {
+        const hay = (q.text + ' ' + q.choices.join(' ') + ' ' + (q.explain || '')).toLowerCase();
+        if (term && !hay.includes(term)) return;
+        total++; if (shown >= 300) return; shown++;
+        const tr = h('tr', { class: 'r', title: 'اضغط لتعديل السؤال' },
+          h('td', { class: 'n' }, String(qi + 1)), h('td', {}, c.name), h('td', {}, q.text || '—'),
+          h('td', {}, q.choices.map((ch, i) => h('div', { class: i === q.correct ? 'ok' : '' }, (LETTERS[i] || i + 1) + '. ' + ch + (i === q.correct ? ' ✓' : '')))),
+          h('td', { class: 'n' }, String(q.points)),
+          h('td', {}, q.image ? h('img', { class: 'th', src: q.image, alt: '' }) : ''));
+        tr.onclick = () => { editCat = c.id; openQ.add(q.id); tab = 'content'; openSettings(); setTimeout(() => { const all = [...document.querySelectorAll('.qitem')]; const el = all[c.questions.indexOf(q)]; el && el.scrollIntoView({ block: 'center' }); }, 30); };
+        tbody.appendChild(tr);
+      });
+    });
+    count.textContent = total > shown ? `يظهر ${shown} من ${total} سؤال` : `${total} سؤال`;
+    if (!total) tbody.appendChild(h('tr', {}, h('td', { colspan: 6, style: 'text-align:center;color:var(--panelMuted);padding:20px' }, 'لا توجد أسئلة مطابقة')));
+  };
+  qIn.oninput = () => { dbQuery = qIn.value; draw(); };
+  cSel.onchange = () => { dbCat = cSel.value; draw(); };
+  b.append(h('h4', {}, 'سجل الأسئلة'), h('div', { class: 'dbfilter' }, qIn, cSel, count),
+    h('div', { class: 'dbtable-wrap' }, h('table', { class: 'dbtable' },
+      h('thead', {}, h('tr', {}, ['#', 'القسم', 'السؤال', 'الاختيارات', 'النقاط', 'الصورة'].map(t => h('th', {}, t)))), tbody)));
+  draw();
+}
+async function cleanAssets() {
+  let list; try { list = await Cloud.assets.list(); } catch (e) { return toast('تعذر قراءة الصور المرفوعة'); }
+  const used = new Set(mediaFields(S).map(([o, k]) => o[k]).filter(v => typeof v === 'string' && v.startsWith('/_blob/')).map(v => v.slice(7)));
+  const unused = list.assets.filter(a => !used.has(a.id));
+  if (!unused.length) return toast('كل الصور المرفوعة مستخدمة');
+  confirmBox(`حذف ${unused.length} صورة مرفوعة لا يستخدمها أي سؤال أو إعداد؟ لا يمكن التراجع.`, 'حذف', async () => {
+    let n = 0; for (const a of unused) { try { await Cloud.assets.delete(a.id); n++; } catch (e) {} }
+    toast(`تم حذف ${n} صورة`); openSettings();
+  });
+}
+/* ---------------- devices: publish to GitHub Pages; installed copies download the encrypted quiz ---------------- */
+function tDevices(b) {
+  const c = ghConf(), admin = !!c.token;
+  const last = +LS.get('quiz-applied');
+  const field = (label, key, opts = {}) => {
+    const i = h('input', { type: opts.secret ? 'password' : 'text', id: 'gh-' + key, value: opts.value ?? LS.get(key), placeholder: opts.ph || '', autocomplete: 'off', dir: opts.ltr ? 'ltr' : null });
+    i.oninput = () => LS.set(key, i.value.trim());
+    const kids = [i];
+    if (opts.secret) { const t = h('button', { class: 'btn sm', type: 'button', onclick: () => { i.type = i.type === 'password' ? 'text' : 'password'; } }, 'إظهار'); kids.push(t); }
+    return F(label, h('div', { class: 'imgpick', style: 'flex-wrap:nowrap' }, ...kids), opts);
+  };
+  const status = h('p', { class: 'note', id: 'pub-status' }, last ? 'آخر نسخة منشورة أو محمّلة على هذا الجهاز: ' + new Date(last).toLocaleString('ar') : 'لم تُنشر أو تُحمّل أي نسخة على هذا الجهاز بعد.');
+  b.append(
+    h('div', { class: 'toolbar', style: 'margin-bottom:12px' },
+      h('span', { class: 'dbbadge ' + (admin ? 'on' : 'off') }, h('i'), admin ? 'هذا الجهاز: جهاز المدير (يملك مفتاح النشر)' : 'هذا الجهاز: جهاز عرض (يستقبل الأسئلة فقط)')),
+    h('p', { class: 'note' }, 'على جهازك تعدّل الأسئلة ثم تضغط «نشر للأجهزة». كل الكمبيوترات المثبت عليها التطبيق تحمّل آخر نسخة تلقائياً عند فتحه، وتحتفظ بها لتعمل بدون إنترنت. الملف المنشور مشفّر بكلمة سر المسابقة، فلا يقرأ الأسئلة إلا من يعرفها.'),
+    !SITE ? h('p', { class: 'note', style: 'margin-top:10px;color:#9a5a00' }, 'النشر يعمل من نسخة التطبيق المثبتة من GitHub أو من الملف على جهازك، ولا يعمل من داخل رابط claude.ai.') : null,
+    h('h4', {}, 'كلمة سر المسابقة'),
+    h('div', { class: 'fields' }, field('كلمة السر (تُطلب مرة واحدة في كل كمبيوتر)', 'quiz-pass', { secret: true, hint: 'إذا غيّرتها ستطلب الأجهزة كلمة السر الجديدة عند التحديث القادم' })),
+    h('h4', {}, 'بيانات GitHub (لجهاز المدير فقط)'),
+    h('div', { class: 'fields' },
+      field('اسم الحساب', 'gh-owner', { value: c.owner, ltr: true, ph: 'username' }),
+      field('اسم المستودع', 'gh-repo', { value: c.repo, ltr: true, ph: 'quiz-app' }),
+      field('الفرع', 'gh-branch', { value: c.branch, ltr: true, ph: 'main' }),
+      field('مفتاح النشر (Token)', 'gh-token', { secret: true, ltr: true, ph: 'github_pat_…', hint: 'يُحفظ على هذا الجهاز فقط ولا يُنشر أبداً' })),
+    h('p', { class: 'hint', style: 'margin-top:8px' }, 'لإنشاء المفتاح: github.com ← Settings ← Developer settings ← Fine-grained tokens ← اختر مستودع المسابقة فقط ← Contents: Read and write.'),
+    h('div', { class: 'toolbar', style: 'margin-top:16px' },
+      h('button', { class: 'btn pri', id: 'pub-go', onclick: async e => {
+        const btn = e.currentTarget; btn.disabled = true;
+        try { await ghPublish(t => status.textContent = t); status.textContent = 'تم النشر ✓ تصل الأسئلة للأجهزة خلال دقيقة إلى دقيقتين.'; toast('تم النشر للأجهزة'); }
+        catch (err) { status.textContent = 'تعذر النشر: ' + (err.message || err); }
+        btn.disabled = false;
+      } }, 'نشر للأجهزة الآن'),
+      h('button', { class: 'btn', onclick: downloadBundle }, 'تنزيل الملف المشفّر (للرفع اليدوي)'),
+      SITE ? h('button', { class: 'btn', onclick: () => siteCheck(true) }, 'تحميل آخر نسخة منشورة') : null),
+    status,
+    h('p', { class: 'hint' }, 'الرفع اليدوي: نزّل الملف المشفّر، ثم ارفعه في المستودع داخل مجلد data باسم quiz.enc.json.'));
+}
+const SITE = /^https?:$/.test(location.protocol) && !(window.claude && window.claude.use);
+const LS = {
+  get(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+  set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} }
+};
+let applyingRemote = false;
+const b64 = buf => { let out = ''; const a = buf instanceof Uint8Array ? buf : new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) out += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(out); };
+const unb64 = str => Uint8Array.from(atob(str), ch => ch.charCodeAt(0));
+async function deriveKey(pass, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function encryptState(state, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pass, salt);
+  const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(state)));
+  return { app: 'quiz-app', v: 1, publishedAt: Date.now(), salt: b64(salt), iv: b64(iv), data: b64(data) };
+}
+async function decryptBundle(bundle, pass) {
+  const key = await deriveKey(pass, unb64(bundle.salt));
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(bundle.iv) }, key, unb64(bundle.data));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+function ghConf() {
+  const onPages = location.hostname.endsWith('.github.io');
+  const gOwner = onPages ? location.hostname.split('.')[0] : '', gRepo = onPages ? (location.pathname.split('/').filter(Boolean)[0] || '') : '';
+  return { token: LS.get('gh-token'), owner: LS.get('gh-owner') || gOwner, repo: LS.get('gh-repo') || gRepo, branch: LS.get('gh-branch') || 'main', pass: LS.get('quiz-pass') };
+}
+async function publishableState() { return Cloud.on ? inlineBlobs(S) : JSON.parse(JSON.stringify(S)); }
+async function ghPublish(step) {
+  const c = ghConf();
+  if (!c.pass) throw new Error('اكتب كلمة سر المسابقة أولاً');
+  if (!c.token || !c.owner || !c.repo) throw new Error('أكمل اسم الحساب واسم المستودع ومفتاح النشر');
+  step('جارٍ تشفير الأسئلة…');
+  const bundle = await encryptState(await publishableState(), c.pass);
+  const content = b64(new TextEncoder().encode(JSON.stringify(bundle)));
+  const api = `https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/data/quiz.enc.json`;
+  const hdr = { Authorization: 'Bearer ' + c.token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  step('جارٍ الاتصال بـ GitHub…');
+  let sha, r0;
+  try { r0 = await fetch(api + '?ref=' + encodeURIComponent(c.branch), { headers: hdr, cache: 'no-store' }); }
+  catch (e) { throw new Error('لا يوجد اتصال بالإنترنت'); }
+  if (r0.ok) sha = (await r0.json()).sha;
+  else if (r0.status === 401) throw new Error('مفتاح النشر غير صحيح أو منتهي الصلاحية');
+  else if (r0.status !== 404) throw new Error('تعذر الوصول إلى المستودع (' + r0.status + ')');
+  step('جارٍ رفع الأسئلة… (' + (content.length / 1048576).toFixed(1) + ' ميغابايت)');
+  const r = await fetch(api, { method: 'PUT', headers: { ...hdr, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'تحديث أسئلة المسابقة', content, branch: c.branch, sha }) });
+  if (!r.ok) {
+    const t = await r.json().catch(() => ({}));
+    throw new Error(r.status === 404 ? 'المستودع غير موجود، أو المفتاح لا يملك صلاحية الكتابة عليه' : r.status === 403 ? 'المفتاح لا يملك صلاحية Contents: Read and write' : (t.message || 'خطأ ' + r.status));
+  }
+  LS.set('quiz-applied', String(bundle.publishedAt)); LS.set('quiz-dirty', '');
+  return bundle;
+}
+async function downloadBundle() {
+  const c = ghConf();
+  if (!c.pass) return toast('اكتب كلمة سر المسابقة أولاً');
+  const bundle = await encryptState(await publishableState(), c.pass);
+  const a = h('a', { href: URL.createObjectURL(new Blob([JSON.stringify(bundle)], { type: 'application/json' })), download: 'quiz.enc.json' });
+  document.body.appendChild(a); a.click(); a.remove();
+  LS.set('quiz-applied', String(bundle.publishedAt)); LS.set('quiz-dirty', '');
+}
+async function fetchBundle() {
+  try { const r = await fetch('data/quiz.enc.json?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return null; const j = await r.json(); return j && j.data ? j : null; }
+  catch (e) { return null; }
+}
+function askPassword(bundle) {
+  return new Promise(resolve => dialog(box => {
+    const inp = h('input', { type: 'password', id: 'quiz-pass-in', placeholder: 'كلمة سر المسابقة', autocomplete: 'off' });
+    const err = h('span', { class: 'hint', style: 'color:#c0262d' });
+    const go = async () => {
+      err.textContent = 'جارٍ التحقق…';
+      try { const st = await decryptBundle(bundle, inp.value); LS.set('quiz-pass', inp.value); closeDialog(); resolve(st); }
+      catch (e) { err.textContent = 'كلمة السر غير صحيحة'; inp.select(); }
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+    box.append(h('b', {}, 'تحميل أسئلة المسابقة'), h('span', { class: 'hint' }, 'أدخل كلمة سر المسابقة مرة واحدة على هذا الجهاز. بعدها تصل التحديثات تلقائياً.'), inp, err,
+      h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'تحميل الأسئلة'), h('button', { class: 'btn', onclick: () => { closeDialog(); resolve(null); } }, 'لاحقاً')));
+  }));
+}
+let siteChecking = false;
+async function siteCheck(manual) {
+  if (!SITE || siteChecking) return;
+  siteChecking = true;
+  try {
+    const bundle = await fetchBundle();
+    if (!bundle) { if (manual) toast('لا توجد نسخة منشورة بعد، أو لا يوجد اتصال'); return; }
+    const applied = +LS.get('quiz-applied') || 0;
+    if (!manual && bundle.publishedAt <= applied) return;
+    if (!manual && LS.get('gh-token') && LS.get('quiz-dirty')) { toast('توجد نسخة منشورة أحدث، وعندك تعديلات لم تنشرها بعد'); return; }
+    let state = null;
+    const pass = LS.get('quiz-pass');
+    if (pass) { try { state = await decryptBundle(bundle, pass); } catch (e) { state = null; } }
+    if (!state) state = await askPassword(bundle);
+    if (!state || !state.settings) return;
+    applyingRemote = true;
+    const sounds = [S.settings.correctPop.customSound, S.settings.wrongPop.customSound];
+    S = merge(defaults(), state); S.categories = state.categories || [];
+    if (!S.settings.correctPop.customSound) S.settings.correctPop.customSound = sounds[0] || '';
+    if (!S.settings.wrongPop.customSound) S.settings.wrongPop.customSound = sounds[1] || '';
+    LS.set('quiz-applied', String(bundle.publishedAt)); LS.set('quiz-dirty', '');
+    await DB.set('state', S); await applyTheme();
+    applyingRemote = false;
+    if ($('#settings').hidden) refresh(); else openSettings();
+    toast('تم تحميل آخر نسخة من الأسئلة');
+  } finally { siteChecking = false; applyingRemote = false; }
+}
+if (SITE) {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  let installEvt = null;
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#install-btn').hidden = false; });
+  $('#install-btn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; $('#install-btn').hidden = true; };
+  addEventListener('appinstalled', () => { $('#install-btn').hidden = true; toast('تم تثبيت التطبيق على هذا الجهاز'); });
+  /* check for a newer published quiz now and then, only on screens where swapping questions is safe */
+  setInterval(() => { if (['home', 'cats', 'teams'].includes(cur.screen) && $('#settings').hidden && $('#pop').hidden) siteCheck(false); }, 120000);
+  addEventListener('online', () => { if (['home', 'cats', 'teams'].includes(cur.screen)) siteCheck(false); });
+}
+function tBackup(b) {
+  b.append(
+    h('p', { class: 'note' }, 'كل التغييرات تحفظ تلقائياً في هذا المتصفح. لنقل المسابقة إلى جهاز آخر أو الاحتفاظ بنسخة، صدّر ملف المسابقة ثم استورده في الجهاز الآخر. الملف يحتوي الأسئلة والصور والخطوط والإعدادات.'),
+    h('div', { class: 'toolbar', style: 'margin-top:14px' },
+      h('button', { class: 'btn pri', onclick: exportData }, 'تصدير ملف المسابقة'),
+      h('button', { class: 'btn', onclick: importData }, 'استيراد ملف مسابقة'),
+      h('button', { class: 'btn', onclick: copyData }, 'نسخ البيانات كنص')),
+    h('h4', {}, 'إعادة الضبط'),
+    h('div', { class: 'toolbar' }, h('button', { class: 'btn danger', onclick: () => confirmBox('حذف كل الأقسام والأسئلة والإعدادات والعودة للمسابقة التجريبية؟', 'إعادة الضبط', () => { S = defaults(); P = newProgress(); editCat = null; save(); saveProgress(); applyTheme(); openSettings(); toast('تمت إعادة الضبط'); }) }, 'إعادة ضبط المصنع'))
+  );
+}
+let xlsxP = null;
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (!xlsxP) xlsxP = new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = () => res(window.XLSX); sc.onerror = () => { xlsxP = null; rej(); }; document.head.appendChild(sc);
+  });
+  return xlsxP;
+}
+const XL_HEAD = ['القسم', 'السؤال', 'الاختيار 1', 'الاختيار 2', 'الاختيار 3', 'الاختيار 4', 'الاختيار 5', 'الاختيار 6', 'رقم الإجابة الصحيحة', 'النقاط', 'شرح الإجابة'];
+async function excelExport(withData) {
+  let X; try { X = await loadXLSX(); } catch (e) { return toast('تعذر تحميل أداة Excel، تأكد من الاتصال بالإنترنت'); }
+  const rows = [XL_HEAD];
+  if (withData) S.categories.forEach(c => c.questions.forEach(q => rows.push([c.name, q.text, ...[0, 1, 2, 3, 4, 5].map(i => q.choices[i] ?? ''), q.correct + 1, q.points, q.explain || ''])));
+  else rows.push(
+    ['ثقافة عامة', 'ما هي عاصمة اليابان؟', 'بكين', 'طوكيو', 'سيول', 'بانكوك', '', '', 2, 1, 'طوكيو هي عاصمة اليابان'],
+    ['دين', 'كم عدد أركان الإسلام؟', '3', '4', '5', '6', '', '', 3, 1, ''],
+    ['علوم', 'ما الرمز الكيميائي للذهب؟', 'Ag', 'Au', 'Fe', '', '', '', 2, 2, '']);
+  const ws = X.utils.aoa_to_sheet(rows); ws['!cols'] = XL_HEAD.map((_, i) => ({ wch: i === 1 ? 42 : i === 10 ? 30 : 14 }));
+  const wb = X.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] }; X.utils.book_append_sheet(wb, ws, 'الأسئلة');
+  try { X.writeFile(wb, withData ? (S.settings.title || 'الأسئلة') + '.xlsx' : 'قالب-الأسئلة.xlsx'); } catch (e) {}
+  toast('إذا لم يبدأ التنزيل، شغّل البرنامج من الملف على جهازك');
+}
+const toLatin = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).trim();
+function parseRows(rows) {
+  rows = rows.filter(r => r.some(c => String(c).trim() !== ''));
+  let map = { cat: 0, q: 1, ch: [2, 3, 4, 5], correct: 6, pts: 7, exp: 8 };
+  const hd = (rows[0] || []).map(c => String(c).trim());
+  if (hd.some(c => c.includes('السؤال'))) {
+    map = { cat: -1, q: -1, ch: [], correct: -1, pts: -1, exp: -1 };
+    hd.forEach((c, i) => {
+      if (c.includes('القسم') || c.includes('الفئة')) map.cat = i;
+      else if (c.includes('الصحيح') || c === 'الإجابة' || c.includes('الجواب')) map.correct = i;
+      else if (c.includes('السؤال')) map.q = i;
+      else if (c.includes('اختيار') || c.includes('خيار')) map.ch.push(i);
+      else if (c.includes('نقاط') || c.includes('النقاط') || c.includes('درجة')) map.pts = i;
+      else if (c.includes('شرح') || c.includes('معلومة')) map.exp = i;
+    });
+    rows = rows.slice(1);
+  }
+  const items = []; let skipped = 0;
+  rows.forEach(r => {
+    const g = i => i >= 0 ? String(r[i] ?? '').trim() : '';
+    const text = g(map.q), choices = map.ch.map(g).filter(Boolean).slice(0, 6);
+    if (!text || choices.length < 2) { skipped++; return; }
+    const cv = g(map.correct), n = parseInt(toLatin(cv), 10); let ci = 0;
+    if (n >= 1 && n <= choices.length) ci = n - 1;
+    else if (LETTERS.indexOf(cv) >= 0 && LETTERS.indexOf(cv) < choices.length) ci = LETTERS.indexOf(cv);
+    else if (choices.indexOf(cv) >= 0) ci = choices.indexOf(cv);
+    items.push({ cat: g(map.cat) || 'أسئلة مستوردة', q: { id: uid(), text, image: '', choices, correct: ci, points: +toLatin(g(map.pts)) || 1, explain: g(map.exp) } });
+  });
+  return { items, skipped };
+}
+async function excelImport() {
+  const f = await pickFile('.xlsx,.xls,.csv,.ods'); if (!f) return;
+  let X; try { X = await loadXLSX(); } catch (e) { return toast('تعذر تحميل أداة Excel، تأكد من الاتصال بالإنترنت'); }
+  let rows;
+  try { const isText = /\.(csv|txt)$/i.test(f.name); const wb = isText ? X.read(await f.text(), { type: 'string' }) : X.read(await f.arrayBuffer()); rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' }); }
+  catch (e) { return toast('تعذر قراءة الملف. تأكد أنه ملف Excel أو CSV'); }
+  const res = parseRows(rows);
+  if (!res.items.length) return toast('لم أجد أسئلة في الملف. استخدم القالب كمثال');
+  const cats = new Set(res.items.map(x => x.cat));
+  dialog(box => box.append(
+    h('b', {}, `وجدت ${res.items.length} سؤال في ${cats.size} ${cats.size > 2 ? 'أقسام' : 'قسم'}: ${[...cats].join('، ')}`),
+    res.skipped ? h('span', { class: 'hint' }, `تم تجاهل ${res.skipped} صف ناقص (كل سؤال يحتاج نصاً واختيارين على الأقل)`) : null,
+    h('div', { class: 'toolbar' },
+      h('button', { class: 'btn pri', onclick: () => applyImport(res.items, false) }, 'إضافة إلى الأسئلة الحالية'),
+      h('button', { class: 'btn danger', onclick: () => applyImport(res.items, true) }, 'استبدال كل الأسئلة'),
+      h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء'))));
+}
+function applyImport(items, replace) {
+  closeDialog();
+  if (replace) { S.categories = []; P = newProgress(); saveProgress(); }
+  const palette = ['#1f6f63', '#2c5e8c', '#8a5a2b', '#7a2840', '#5b3f8c', '#2f7a4a'];
+  items.forEach(({ cat, q }) => {
+    let c = S.categories.find(x => x.name === cat);
+    if (!c) { c = { id: uid(), name: cat, icon: '', color: palette[S.categories.length % palette.length], image: '', questions: [] }; S.categories.push(c); }
+    c.questions.push(q);
+  });
+  editCat = null; save(); openSettings(); toast(`تم استيراد ${items.length} سؤال`);
+}
+async function exportData() {
+  const data = Cloud.on ? await inlineBlobs(S) : S;
+  const blob = new Blob([JSON.stringify({ app: 'quiz-app', state: data }, null, 1)], { type: 'application/json' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: (S.settings.title || 'quiz') + '.json' });
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('إذا لم يبدأ التنزيل، استخدم «نسخ البيانات كنص»');
+}
+async function copyData() {
+  const txt = JSON.stringify({ app: 'quiz-app', state: S });
+  try { await navigator.clipboard.writeText(txt); toast('تم النسخ'); }
+  catch (e) { dialog(box => { const ta = h('textarea', { style: 'min-height:160px;direction:ltr' }); ta.value = txt; box.append(h('b', {}, 'انسخ النص التالي:'), ta, h('button', { class: 'btn', onclick: closeDialog }, 'إغلاق')); setTimeout(() => ta.select(), 50); }); }
+}
+async function importData() {
+  const f = await pickFile('.json,application/json'); if (!f) return;
+  try {
+    const data = JSON.parse(await f.text()); const st = data.state || data;
+    if (!st.settings || !Array.isArray(st.categories)) throw 0;
+    confirmBox('استبدال المسابقة الحالية بالملف المستورد؟', 'استيراد', async () => { S = merge(defaults(), st); S.categories = st.categories; P = newProgress(); editCat = null; if (Cloud.on && Cloud.assets) { toast('جارٍ رفع الصور…'); await migrateMedia(S); } save(); saveProgress(); applyTheme(); openSettings(); toast('تم الاستيراد'); });
+  } catch (e) { toast('الملف غير صالح. اختر ملفاً صدّرته من هذا البرنامج'); }
+}
+
+/* ---------------- boot ---------------- */
+(async () => {
+  await DB.open();
+  const st = await DB.get('state'); const pr = await DB.get('progress');
+  if (st && st.settings) {
+    S = merge(defaults(), st); S.categories = st.categories || [];
+    if (!(st.v >= 2)) {
+      if (st.settings.colors && st.settings.colors.bg === '#17143a') S.settings.colors = { ...THEMES[0][1] };
+      if (S.settings.font === 'Cairo') S.settings.font = 'Tajawal';
+      if (S.settings.headFont === 'Cairo') S.settings.headFont = 'El Messiri';
+      S.v = 2; save();
+    }
+  }
+  if (pr && pr.answers) P = { ...newProgress(), ...pr };
+  await applyTheme(); renderHome();
+  if (SITE) siteCheck(false); else cloudInit(JSON.parse(JSON.stringify(S)));
+})();
+})();
+</script>
+</body></html>
