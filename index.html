@@ -301,6 +301,8 @@ h1,h2,h3{font-family:var(--head);text-wrap:balance;margin:0}
 .dbtable td.n{font-variant-numeric:tabular-nums;color:var(--panelMuted)}
 .cloudnote{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:max(14px,env(safe-area-inset-left,0px));z-index:40;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:6px 14px;font-size:.85em;font-family:'Tajawal',sans-serif;backdrop-filter:blur(6px)}
 
+.verline{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);background:var(--card);border:1px solid var(--gold-soft);color:var(--muted);border-radius:999px;padding:7px 16px;font-size:.88em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(6px)}
+.verline:hover{color:var(--text);border-color:var(--primary)}
 /* ---------- settings panel (light, neutral so it reads regardless of the game's colors) ---------- */
 .modal{position:fixed;inset:0;z-index:80;background:rgba(10,8,30,.6);display:grid;place-items:center;padding:16px;direction:rtl}
 .modal[hidden]{display:none!important}
@@ -378,6 +380,7 @@ h1,h2,h3{font-family:var(--head);text-wrap:balance;margin:0}
     <div class="orn" aria-hidden="true"><i></i><svg viewBox="0 0 100 100"></svg><i></i></div>
     <p class="sub" id="h-sub"></p>
     <button class="big" id="h-start"></button>
+    <button class="verline" id="ver-line" hidden></button>
   </section>
 
   <!-- CATEGORIES -->
@@ -1827,7 +1830,7 @@ async function ghPublish(step) {
     const t = await r.json().catch(() => ({}));
     throw new Error(r.status === 404 ? 'المستودع غير موجود، أو المفتاح لا يملك صلاحية الكتابة عليه' : r.status === 403 ? 'المفتاح لا يملك صلاحية Contents: Read and write' : (t.message || 'خطأ ' + r.status));
   }
-  LS.set('quiz-applied', String(bundle.publishedAt)); LS.set('quiz-dirty', '');
+  LS.set('quiz-applied', String(bundle.publishedAt)); LS.set('quiz-dirty', ''); updateVerLine();
   return bundle;
 }
 async function downloadBundle() {
@@ -1856,16 +1859,31 @@ function askPassword(bundle) {
       h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'تحميل الأسئلة'), h('button', { class: 'btn', onclick: () => { closeDialog(); resolve(null); } }, 'لاحقاً')));
   }));
 }
-let siteChecking = false;
+let siteChecking = false, askedNewer = 0;
+const fmtTime = t => new Date(t).toLocaleString('ar', { day: 'numeric', month: 'numeric', hour: 'numeric', minute: '2-digit' });
+function updateVerLine(msg) {
+  if (!SITE) return;
+  const el = $('#ver-line'), t = +LS.get('quiz-applied');
+  el.hidden = false;
+  el.textContent = msg || (t ? `نسخة الأسئلة: ${fmtTime(t)} · تحقق من التحديث ⟳` : 'لم تُحمّل أسئلة المسابقة بعد · اضغط للتحميل ⟳');
+}
 async function siteCheck(manual) {
   if (!SITE || siteChecking) return;
   siteChecking = true;
+  if (manual) updateVerLine('جارٍ التحقق من التحديثات…');
   try {
     const bundle = await fetchBundle();
-    if (!bundle) { if (manual) toast('لا توجد نسخة منشورة بعد، أو لا يوجد اتصال'); return; }
+    if (!bundle) { if (manual) { toast('تعذر الوصول إلى الأسئلة المنشورة. تأكد من الإنترنت'); } return; }
     const applied = +LS.get('quiz-applied') || 0;
+    if (manual && bundle.publishedAt <= applied && !LS.get('quiz-dirty')) { toast('عندك آخر نسخة من الأسئلة ✓'); return; }
     if (!manual && bundle.publishedAt <= applied) return;
-    if (!manual && LS.get('gh-token') && LS.get('quiz-dirty')) { toast('توجد نسخة منشورة أحدث، وعندك تعديلات لم تنشرها بعد'); return; }
+    if (!manual && LS.get('gh-token') && LS.get('quiz-dirty')) {
+      if (askedNewer !== bundle.publishedAt) {
+        askedNewer = bundle.publishedAt;
+        confirmBox(`توجد نسخة منشورة أحدث (${fmtTime(bundle.publishedAt)})، وعلى هذا الجهاز تعديلات لم تُنشر. تحميل النسخة المنشورة يستبدل تعديلات هذا الجهاز.`, 'تحميل النسخة المنشورة', () => { siteChecking = false; siteCheck(true); });
+      }
+      return;
+    }
     let state = null;
     const pass = LS.get('quiz-pass');
     if (pass) { try { state = await decryptBundle(bundle, pass); } catch (e) { state = null; } }
@@ -1880,8 +1898,8 @@ async function siteCheck(manual) {
     await DB.set('state', S); await applyTheme();
     applyingRemote = false;
     if ($('#settings').hidden) refresh(); else openSettings();
-    toast('تم تحميل آخر نسخة من الأسئلة');
-  } finally { siteChecking = false; applyingRemote = false; }
+    toast('تم تحميل آخر نسخة من الأسئلة ✓');
+  } finally { siteChecking = false; applyingRemote = false; updateVerLine(); }
 }
 if (SITE) {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -1890,7 +1908,10 @@ if (SITE) {
   $('#install-btn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; $('#install-btn').hidden = true; };
   addEventListener('appinstalled', () => { $('#install-btn').hidden = true; toast('تم تثبيت التطبيق على هذا الجهاز'); });
   /* check for a newer published quiz now and then, only on screens where swapping questions is safe */
-  setInterval(() => { if (['home', 'cats', 'teams'].includes(cur.screen) && $('#settings').hidden && $('#pop').hidden) siteCheck(false); }, 120000);
+  const safeCheck = () => { if (['home', 'cats', 'teams'].includes(cur.screen) && $('#settings').hidden && $('#pop').hidden && $('#dialog').hidden) siteCheck(false); };
+  setInterval(safeCheck, 60000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') safeCheck(); });
+  $('#ver-line').onclick = () => siteCheck(true);
   addEventListener('online', () => { if (['home', 'cats', 'teams'].includes(cur.screen)) siteCheck(false); });
 }
 function tBackup(b) {
@@ -2021,7 +2042,7 @@ async function importData() {
   }
   if (pr && pr.answers) P = { ...newProgress(), ...pr };
   await applyTheme(); renderHome();
-  if (SITE) siteCheck(false); else cloudInit(JSON.parse(JSON.stringify(S)));
+  if (SITE) { updateVerLine(); siteCheck(false); } else cloudInit(JSON.parse(JSON.stringify(S)));
 })();
 })();
 </script>
