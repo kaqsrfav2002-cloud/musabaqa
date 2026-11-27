@@ -303,6 +303,9 @@ h1,h2,h3{font-family:var(--head);text-wrap:balance;margin:0}
 
 .verline{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);background:var(--card);border:1px solid var(--gold-soft);color:var(--muted);border-radius:999px;padding:7px 16px;font-size:.88em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(6px)}
 .verline:hover{color:var(--text);border-color:var(--primary)}
+.notice{margin:0;max-width:min(52ch,100%);background:var(--gold-faint);border:1px solid var(--gold-soft);border-radius:14px;padding:10px 18px;color:var(--text);font-size:1.05em;line-height:1.7;white-space:pre-line}
+.pinrow{display:flex;gap:8px}
+.pinrow input{text-align:center;font-size:1.4em;letter-spacing:.3em}
 /* ---------- settings panel (light, neutral so it reads regardless of the game's colors) ---------- */
 .modal{position:fixed;inset:0;z-index:80;background:rgba(10,8,30,.6);display:grid;place-items:center;padding:16px;direction:rtl}
 .modal[hidden]{display:none!important}
@@ -379,6 +382,7 @@ h1,h2,h3{font-family:var(--head);text-wrap:balance;margin:0}
     <h1 id="h-title"></h1>
     <div class="orn" aria-hidden="true"><i></i><svg viewBox="0 0 100 100"></svg><i></i></div>
     <p class="sub" id="h-sub"></p>
+    <p class="notice" id="h-notice" hidden></p>
     <button class="big" id="h-start"></button>
     <button class="verline" id="ver-line" hidden></button>
   </section>
@@ -563,7 +567,8 @@ function defaults() {
       timer: { enabled: false, seconds: 30 },
       correctPop: { enabled: true, title: 'إجابة صحيحة!', message: 'أحسنت، بارك الله فيك', emoji: '🌟', image: '', confetti: true, sound: true, customSound: '' },
       wrongPop: { enabled: true, title: 'إجابة خاطئة', message: 'لا بأس، حاول في السؤال القادم', emoji: '😔', image: '', rain: true, shake: true, sound: true, customSound: '', showAnswer: true },
-      pin: '',
+      pin: '', pinHash: '',
+      notice: { text: '', at: 0 },
       autoEnd: true,
       teams: { enabled: true, mode: 'turns', list: [
         { id: 't1', name: 'الفريق الأول', color: '#2f8f83' },
@@ -851,7 +856,8 @@ function renderHome() {
   fitArch();
   $('#h-bism').textContent = st.bism || ''; $('#h-bism').hidden = !st.bism;
   $('#h-title').textContent = st.title; $('#h-sub').textContent = st.subtitle;
-  $('#h-sub').hidden = !st.subtitle; $('#h-start').textContent = st.startText || 'ابدأ';
+  $('#h-sub').hidden = !st.subtitle;
+  const nt = (st.notice && st.notice.text || '').trim(); $('#h-notice').hidden = !nt; $('#h-notice').textContent = nt ? '📢 ' + nt : ''; $('#h-start').textContent = st.startText || 'ابدأ';
 }
 /* shape the arch around the logo: its proportions follow the image, and the image sits below the curve */
 function fitArch() {
@@ -1376,14 +1382,58 @@ function confirmBox(msg, yesText, onYes) {
     h('button', { class: 'btn pri', onclick: () => { closeDialog(); onYes(); } }, yesText),
     h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء'))));
 }
+/* settings lock: the code is stored as a hash and travels with the published quiz */
+async function pinDigest(v) {
+  try { const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('musabaqa-pin:' + v)); return [...new Uint8Array(d)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  catch (e) { return 'plain:' + v; }
+}
+let pinFails = 0, pinLockUntil = 0;
 function openSettingsGuarded() {
-  if (!S.settings.pin) return openSettings();
+  const st = S.settings;
+  if (!st.pinHash && !st.pin) return setPinFlow(true);
   dialog(box => {
-    const inp = h('input', { type: 'password', id: 'pin-in', inputmode: 'numeric', placeholder: 'الرمز السري' });
+    const inp = h('input', { type: 'password', id: 'pin-in', inputmode: 'numeric', autocomplete: 'off', placeholder: 'رمز الإعدادات' });
     const err = h('span', { class: 'hint', style: 'color:#c0262d' });
-    const go = () => { if (inp.value === S.settings.pin) { closeDialog(); openSettings(); } else { err.textContent = 'الرمز غير صحيح'; inp.select(); } };
+    const go = async () => {
+      if (Date.now() < pinLockUntil) { err.textContent = `محاولات كثيرة. انتظر ${Math.ceil((pinLockUntil - Date.now()) / 1000)} ثانية`; return; }
+      const ok = st.pinHash ? (await pinDigest(inp.value)) === st.pinHash : inp.value === st.pin;
+      if (ok) { pinFails = 0; closeDialog(); openSettings(); return; }
+      pinFails++; inp.value = '';
+      if (pinFails >= 5) { pinLockUntil = Date.now() + 60000; pinFails = 0; err.textContent = 'محاولات كثيرة. حاول بعد دقيقة'; }
+      else err.textContent = 'الرمز غير صحيح';
+      inp.focus();
+    };
     inp.onkeydown = e => { if (e.key === 'Enter') go(); };
-    box.append(h('b', {}, 'أدخل الرمز السري لفتح الإعدادات'), inp, err, h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'فتح'), h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء')));
+    const forgot = LS.get('gh-token') ? h('button', { class: 'btn sm', onclick: () => resetPinWithToken() }, 'نسيت الرمز؟') : null;
+    box.append(h('b', {}, '🔒 الإعدادات مقفلة'), h('span', { class: 'hint' }, 'أدخل رمز الإعدادات للمتابعة'), inp, err,
+      h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'فتح'), h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء'), forgot));
+  });
+}
+function setPinFlow(first) {
+  dialog(box => {
+    const a = h('input', { type: 'password', id: 'pin-new', inputmode: 'numeric', autocomplete: 'new-password', placeholder: 'الرمز الجديد' });
+    const b2 = h('input', { type: 'password', id: 'pin-new2', inputmode: 'numeric', autocomplete: 'new-password', placeholder: 'أعد كتابة الرمز' });
+    const err = h('span', { class: 'hint', style: 'color:#c0262d' });
+    const go = async () => {
+      if (a.value.length < 4) { err.textContent = 'الرمز 4 أرقام أو حروف على الأقل'; return; }
+      if (a.value !== b2.value) { err.textContent = 'الرمزان غير متطابقين'; return; }
+      S.settings.pinHash = await pinDigest(a.value); S.settings.pin = '';
+      save(); closeDialog(); openSettings(first ? 'devices' : undefined);
+      toast(SITE ? 'تم حفظ الرمز. انشر للأجهزة ليصل إليها' : 'تم حفظ رمز الإعدادات');
+    };
+    b2.onkeydown = e => { if (e.key === 'Enter') go(); };
+    box.append(h('b', {}, first ? '🔒 أنشئ رمزاً لقفل الإعدادات' : '🔒 تغيير رمز الإعدادات'),
+      h('span', { class: 'hint' }, 'هذا الرمز يُطلب لفتح الإعدادات على كل الأجهزة، ويصل إليها مع النشر. احفظه عندك.'),
+      a, b2, err, h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'حفظ الرمز'), h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء')));
+  });
+}
+function resetPinWithToken() {
+  dialog(box => {
+    const t = h('input', { type: 'password', id: 'pin-token', autocomplete: 'off', placeholder: 'github_pat_…', dir: 'ltr' });
+    const err = h('span', { class: 'hint', style: 'color:#c0262d' });
+    const go = () => { if (t.value.trim() && t.value.trim() === LS.get('gh-token')) { closeDialog(); setPinFlow(false); } else err.textContent = 'المفتاح لا يطابق مفتاح النشر المحفوظ على هذا الجهاز'; };
+    box.append(h('b', {}, 'استعادة رمز الإعدادات'), h('span', { class: 'hint' }, 'على جهاز المدير فقط: الصق مفتاح النشر (Token) لإثبات أنك المدير، ثم اختر رمزاً جديداً.'), t, err,
+      h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: go }, 'متابعة'), h('button', { class: 'btn', onclick: closeDialog }, 'إلغاء')));
   });
 }
 
@@ -1664,7 +1714,8 @@ function tPlay(b) {
     h('h4', {}, 'اختصارات لوحة المفاتيح (للمقدم)'),
     h('p', { class: 'note' }, 'الأرقام 1 إلى 6: اختيار الإجابة · Enter أو المسافة: متابعة بعد النتيجة · Esc: رجوع خطوة · F: ملء الشاشة · T: لوحة النتائج'),
     h('h4', {}, 'حماية الإعدادات'),
-    h('div', { class: 'fields' }, F('رمز سري لفتح الإعدادات', (() => { const i = h('input', { type: 'text', value: s.pin, placeholder: 'اتركه فارغاً بدون رمز' }); i.oninput = () => { s.pin = i.value.trim(); changed(); }; return i; })(), { hint: 'مفيد عند عرض المسابقة أمام المتسابقين' })),
+    h('p', { class: 'note' }, 'الإعدادات مقفلة برمز على كل الأجهزة. الرمز يصل للأجهزة مع النشر، ولا يُحفظ كنص مقروء.'),
+    h('div', { class: 'toolbar', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: () => setPinFlow(false) }, 'تغيير رمز الإعدادات')),
     h('h4', {}, 'الجولة الحالية'),
     h('p', { class: 'note' }, (teamsOn() ? ranked().map(t => `${t.name}: ${t.score}`).join(' · ') : `النقاط الحالية: ${P.score}`) + ` · الأسئلة المجاب عليها: ${Object.keys(P.answers).length}`),
     h('div', { class: 'toolbar' }, h('button', { class: 'btn danger', onclick: () => confirmBox('بدء جولة جديدة؟ ستصفر النقاط وتفتح كل الأرقام.', 'ابدأ من جديد', () => { P = newProgress(); saveProgress(); openSettings(); toast('بدأت جولة جديدة'); }) }, 'جولة جديدة (تصفير النقاط)'))
@@ -1758,6 +1809,9 @@ function tDevices(b) {
       h('span', { class: 'dbbadge ' + (admin ? 'on' : 'off') }, h('i'), admin ? 'هذا الجهاز: جهاز المدير (يملك مفتاح النشر)' : 'هذا الجهاز: جهاز عرض (يستقبل الأسئلة فقط)')),
     h('p', { class: 'note' }, 'على جهازك تعدّل الأسئلة ثم تضغط «نشر للأجهزة». كل الكمبيوترات المثبت عليها التطبيق تحمّل آخر نسخة تلقائياً عند فتحه، وتحتفظ بها لتعمل بدون إنترنت. الملف المنشور مشفّر بكلمة سر المسابقة، فلا يقرأ الأسئلة إلا من يعرفها.'),
     !SITE ? h('p', { class: 'note', style: 'margin-top:10px;color:#9a5a00' }, 'النشر يعمل من نسخة التطبيق المثبتة من GitHub أو من الملف على جهازك، ولا يعمل من داخل رابط claude.ai.') : null,
+    h('h4', {}, '📢 رسالة للأجهزة'),
+    h('div', { class: 'fields' }, text(S.settings.notice, 'text', 'رسالة تظهر في الشاشة الرئيسية لكل الأجهزة (اتركها فارغة لإخفائها)', { area: true, wide: true, idx: 'notice', after: () => { S.settings.notice.at = Date.now(); } })),
+    h('p', { class: 'hint' }, 'تصل مع النشر، وتظهر للأجهزة كإشعار عند وصولها أول مرة.'),
     h('h4', {}, 'كلمة سر المسابقة'),
     h('div', { class: 'fields' }, field('كلمة السر (تُطلب مرة واحدة في كل كمبيوتر)', 'quiz-pass', { secret: true, hint: 'إذا غيّرتها ستطلب الأجهزة كلمة السر الجديدة عند التحديث القادم' })),
     h('h4', {}, 'بيانات GitHub (لجهاز المدير فقط)'),
@@ -1899,6 +1953,12 @@ async function siteCheck(manual) {
     applyingRemote = false;
     if ($('#settings').hidden) refresh(); else openSettings();
     toast('تم تحميل آخر نسخة من الأسئلة ✓');
+    const nt = S.settings.notice || {};
+    if (nt.text && nt.text.trim() && +nt.at > (+LS.get('notice-seen') || 0)) {
+      LS.set('notice-seen', String(nt.at));
+      if (S.settings.sounds) [660, 880].forEach((f, i) => beep(f, .2, .14, 'triangle', i * .15));
+      dialog(box => box.append(h('b', { style: 'font-size:1.2em' }, '📢 رسالة من إدارة المسابقة'), h('p', { style: 'margin:0;line-height:1.8;white-space:pre-line' }, nt.text.trim()), h('div', { class: 'toolbar' }, h('button', { class: 'btn pri', onclick: closeDialog }, 'حسناً'))));
+    }
   } finally { siteChecking = false; applyingRemote = false; updateVerLine(); }
 }
 if (SITE) {
@@ -1912,7 +1972,8 @@ if (SITE) {
   setInterval(safeCheck, 60000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') safeCheck(); });
   $('#ver-line').onclick = () => siteCheck(true);
-  addEventListener('online', () => { if (['home', 'cats', 'teams'].includes(cur.screen)) siteCheck(false); });
+  addEventListener('online', () => { toast('عاد الاتصال بالإنترنت'); safeCheck(); });
+  addEventListener('offline', () => toast('لا يوجد إنترنت، يعمل التطبيق بآخر نسخة محمّلة'));
 }
 function tBackup(b) {
   b.append(
